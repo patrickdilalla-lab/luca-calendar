@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# luca-calendar
-=======
 # Luca's Hub
 
 Private co-parenting dashboard for Luca — parenting-time schedule, change requests, daily routines, approved media, documents, expenses, and communication log. Single-page web app; all data lives in the browser (localStorage).
@@ -113,4 +110,3 @@ netlify dev
 1. Edit `index.html`, find `var ALLOW = [...]`, add or remove emails.
 2. In Netlify → Identity → Users, invite the new person or delete the old one.
 3. `git commit -am "Update allowlist"` → `git push`. Netlify redeploys automatically.
->>>>>>> 4a1c179 (Add Netlify Identity gate + security headers)
