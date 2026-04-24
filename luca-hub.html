@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luca's Hub — Co-Parenting Dashboard</title>
+<style>
+:root {
+  --c-dad: #2563eb;
+  --c-dad-bg: #dbeafe;
+  --c-mom: #059669;
+  --c-mom-bg: #d1fae5;
+  --c-gp: #b45309;
+  --c-gp-bg: #fef3c7;
+  --c-unavail: #dc2626;
+  --c-unavail-bg: #fee2e2;
+  --c-propose: #ca8a04;
+  --c-propose-bg: #fef9c3;
+  --c-school: #64748b;
+  --c-school-bg: #f1f5f9;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --ink: #0f172a;
+  --ink-soft: #475569;
+  --line: #e2e8f0;
+  --accent: #6366f1;
+  --success: #10b981;
+  --danger: #ef4444;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(15,23,42,.06), 0 1px 2px rgba(15,23,42,.04);
+  --shadow-lg: 0 10px 25px rgba(15,23,42,.08);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+/* Layout */
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 240px;
+  background: var(--card);
+  border-right: 1px solid var(--line);
+  padding: 20px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.main { flex: 1; padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 4px 12px 20px; }
+.brand-icon { font-size: 28px; }
+.brand-text { font-weight: 700; font-size: 18px; }
+.brand-sub { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; margin-top: -2px; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px;
+  text-decoration: none; color: var(--ink-soft);
+  font-weight: 500; font-size: 14px;
+  cursor: pointer;
+}
+.nav a:hover { background: var(--bg); color: var(--ink); }
+.nav a.active { background: var(--accent); color: #fff; }
+.nav a.active:hover { background: var(--accent); color: #fff; }
+.nav .nav-icon { width: 18px; text-align: center; }
+.nav-section { font-size: 11px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .08em; padding: 14px 12px 6px; }
+
+h1 { font-size: 26px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 0 0 12px; }
+h3 { font-size: 15px; margin: 0 0 8px; font-weight: 600; }
+.page-header { margin-bottom: 24px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.page-sub { color: var(--ink-soft); font-size: 14px; margin-top: 4px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  text-decoration: none;
+  transition: all .1s;
+}
+.btn:hover { background: var(--bg); border-color: #cbd5e1; }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: #4f46e5; border-color: #4f46e5; }
+.btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn-danger:hover { background: #dc2626; }
+.btn-sm { padding: 5px 10px; font-size: 13px; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--ink-soft); }
+.btn-ghost:hover { background: var(--bg); color: var(--ink); }
+
+/* Forms */
+input, select, textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--ink);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+}
+textarea { min-height: 80px; resize: vertical; }
+label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft); margin-bottom: 4px; margin-top: 10px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+/* Badges */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.badge-dad { background: var(--c-dad-bg); color: var(--c-dad); }
+.badge-mom { background: var(--c-mom-bg); color: var(--c-mom); }
+.badge-gp { background: var(--c-gp-bg); color: var(--c-gp); }
+.badge-unavail { background: var(--c-unavail-bg); color: var(--c-unavail); }
+.badge-propose { background: var(--c-propose-bg); color: var(--c-propose); }
+.badge-school { background: var(--c-school-bg); color: var(--c-school); }
+
+/* Dashboard */
+.now-card {
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  color: #fff;
+  box-shadow: var(--shadow-lg);
+}
+.now-card.dad { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+.now-card.mom { background: linear-gradient(135deg, #059669, #10b981); }
+.now-card.gp { background: linear-gradient(135deg, #b45309, #d97706); }
+.now-label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; opacity: .9; }
+.now-who { font-size: 28px; font-weight: 700; margin: 4px 0; }
+.now-sub { font-size: 14px; opacity: .95; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.stat-label { font-size: 12px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+.stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+
+/* Week view */
+.week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+@media (max-width: 900px) { .week-grid { grid-template-columns: 1fr; } }
+.day-cell {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 10px;
+  min-height: 120px;
+  position: relative;
+  cursor: pointer;
+}
+.day-cell:hover { border-color: #94a3b8; }
+.day-cell.today { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(99,102,241,.15); }
+.day-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.day-name { font-weight: 600; font-size: 12px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+.day-date { font-size: 18px; font-weight: 700; }
+.day-block {
+  font-size: 11px; font-weight: 500;
+  padding: 4px 6px; border-radius: 6px;
+  margin-top: 4px;
+}
+.day-block.dad { background: var(--c-dad-bg); color: var(--c-dad); }
+.day-block.mom { background: var(--c-mom-bg); color: var(--c-mom); }
+.day-block.gp { background: var(--c-gp-bg); color: var(--c-gp); }
+.day-block.activity { background: var(--c-school-bg); color: var(--c-school); margin-top: 4px; }
+.day-block.unavail { background: var(--c-unavail-bg); color: var(--c-unavail); border: 1px dashed var(--c-unavail); }
+.day-block.override { background: var(--c-propose-bg); color: var(--c-propose); font-weight: 700; }
+
+.week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+.week-title { font-weight: 600; font-size: 16px; }
+
+/* Lists */
+.list-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--line);
+}
+.list-item:last-child { border-bottom: none; }
+.list-main { flex: 1; min-width: 0; }
+.list-title { font-weight: 500; }
+.list-sub { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+.list-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+/* Tabs */
+.tabs { display: flex; gap: 2px; background: var(--bg); padding: 4px; border-radius: 10px; margin-bottom: 16px; width: fit-content; }
+.tab { padding: 7px 14px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--ink-soft); cursor: pointer; border: none; background: transparent; }
+.tab.active { background: var(--card); color: var(--ink); box-shadow: var(--shadow); }
+
+/* Views */
+.view { display: none; }
+.view.active { display: block; }
+
+/* Modal */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.5); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+.modal-backdrop.active { display: flex; }
+.modal { background: var(--card); border-radius: var(--radius); padding: 24px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal h2 { margin: 0; }
+.modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--ink-soft); padding: 0; line-height: 1; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+/* Mobile nav toggle */
+.mobile-nav-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 50; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; box-shadow: var(--shadow); cursor: pointer; }
+@media (max-width: 800px) {
+  .app { flex-direction: column; }
+  .sidebar { position: fixed; top: 0; left: 0; height: 100vh; z-index: 40; transform: translateX(-100%); transition: transform .2s; width: 260px; }
+  .sidebar.open { transform: translateX(0); }
+  .main { padding: 60px 16px 24px; }
+  .mobile-nav-toggle { display: block; }
+}
+
+/* Color swatches */
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+/* Media/routine items */
+.routine-slot { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.routine-slot:last-child { border-bottom: none; }
+.routine-time { font-weight: 600; color: var(--accent); min-width: 70px; font-size: 13px; }
+.routine-steps { flex: 1; }
+.routine-step { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 14px; }
+.routine-step input[type=checkbox] { width: auto; margin: 0; }
+
+.media-tag { display: inline-block; background: var(--bg); padding: 2px 8px; border-radius: 6px; font-size: 12px; color: var(--ink-soft); margin-left: 6px; }
+
+/* Journal */
+.journal-entry {
+  padding: 12px; border-left: 3px solid var(--accent);
+  background: var(--bg); border-radius: 0 8px 8px 0;
+  margin-bottom: 10px;
+}
+.journal-meta { font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
+.journal-text { white-space: pre-wrap; }
+
+/* Hash pill for tamper-evidence */
+.hash-pill { font-family: ui-monospace, SFMono-Regular, Monaco, Consolas, monospace; font-size: 10px; color: var(--ink-soft); }
+
+/* Expense */
+.expense-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }
+.expense-amount { font-variant-numeric: tabular-nums; font-weight: 600; }
+.expense-owes { font-size: 12px; color: var(--ink-soft); }
+
+/* Alert */
+.alert { padding: 12px 14px; border-radius: 8px; border: 1px solid; font-size: 14px; margin-bottom: 12px; }
+.alert-info { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+.alert-warn { background: #fefce8; border-color: #fde68a; color: #854d0e; }
+.alert-success { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+
+/* Empty state */
+.empty { text-align: center; color: var(--ink-soft); padding: 40px 20px; }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+/* Chip input */
+.chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip { background: var(--bg); border: 1px solid var(--line); padding: 3px 10px; border-radius: 999px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.chip-remove { cursor: pointer; color: var(--ink-soft); font-weight: 700; }
+.chip-remove:hover { color: var(--danger); }
+
+/* Timeline blocks in day detail */
+.timeline { border-left: 2px solid var(--line); padding-left: 16px; margin-top: 8px; }
+.timeline-item { margin-bottom: 10px; position: relative; }
+.timeline-item::before { content: ''; position: absolute; left: -22px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--card); }
+.timeline-time { font-weight: 600; font-size: 13px; color: var(--ink-soft); }
+.timeline-text { font-size: 14px; }
+
+.kv { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; font-size: 14px; }
+.kv-key { color: var(--ink-soft); font-weight: 500; }
+
+/* Print */
+@media print {
+  .sidebar, .mobile-nav-toggle, .btn, .list-actions { display: none !important; }
+  .main { padding: 20px; }
+  .card { box-shadow: none; break-inside: avoid; }
+  .view { display: block !important; }
+}
+</style>
+</head>
+<body>
+
+<button class="mobile-nav-toggle" onclick="toggleSidebar()">☰ Menu</button>
+
+<div class="app">
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <span class="brand-icon">👦</span>
+    <div>
+      <div class="brand-text">Luca's Hub</div>
+      <div class="brand-sub">Co-parenting dashboard</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a data-view="dashboard" class="active"><span class="nav-icon">🏠</span>Dashboard</a>
+    <a data-view="schedule"><span class="nav-icon">📅</span>Schedule</a>
+    <a data-view="changes"><span class="nav-icon">🔁</span>Change requests</a>
+    <a data-view="travel"><span class="nav-icon">✈️</span>Travel / away</a>
+
+    <div class="nav-section">Luca's Daily Life</div>
+    <a data-view="routines"><span class="nav-icon">🧼</span>Daily routines</a>
+    <a data-view="media"><span class="nav-icon">🎬</span>Approved media</a>
+    <a data-view="info"><span class="nav-icon">🩺</span>Info bank</a>
+    <a data-view="documents"><span class="nav-icon">📁</span>Documents</a>
+
+    <div class="nav-section">Co-parenting</div>
+    <a data-view="journal"><span class="nav-icon">📝</span>Journal / log</a>
+    <a data-view="expenses"><span class="nav-icon">💵</span>Expenses</a>
+    <a data-view="audit"><span class="nav-icon">🕓</span>Activity log</a>
+
+    <div class="nav-section">System</div>
+    <a data-view="settings"><span class="nav-icon">⚙️</span>Settings</a>
+  </nav>
+</aside>
+
+<main class="main">
+  <!-- DASHBOARD -->
+  <section class="view active" id="view-dashboard">
+    <div class="page-header">
+      <div>
+        <h1>Dashboard</h1>
+        <div class="page-sub" id="today-label"></div>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="setView('changes'); openChangeRequest()">＋ Propose change</button>
+      </div>
+    </div>
+
+    <div id="now-card-slot"></div>
+
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Next transition</div>
+        <div class="stat-value" id="stat-transition">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Dad days this week</div>
+        <div class="stat-value" id="stat-dad">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Mom days this week</div>
+        <div class="stat-value" id="stat-mom">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Open requests</div>
+        <div class="stat-value" id="stat-requests">0</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h2>This week at a glance</h2>
+        <div id="dash-week"></div>
+      </div>
+      <div class="card">
+        <h2>Today's timeline</h2>
+        <div id="dash-today"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Quick actions</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <button class="btn" onclick="setView('changes'); openChangeRequest()">📨 Request schedule change</button>
+        <button class="btn" onclick="setView('travel'); openTravel()">✈️ Mark travel / unavailable</button>
+        <button class="btn" onclick="setView('journal'); document.getElementById('journal-input').focus()">📝 Log a note</button>
+        <button class="btn" onclick="setView('expenses')">💵 Add expense</button>
+        <a class="btn" href="https://calendar.google.com/calendar/u/0/r" target="_blank">📅 Open Google Calendar ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section class="view" id="view-schedule">
+    <div class="page-header">
+      <div>
+        <h1>Schedule</h1>
+        <div class="page-sub">Weekly parenting time. Click any day to adjust just that occurrence.</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" onclick="setWeekOffset(0)">Today</button>
+        <button class="btn" onclick="exportICS()" title="Exports only day overrides and travel entries — NOT the standard weekly schedule (which already lives in Google Calendar as recurring events).">Export deviations (.ics)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="week-nav">
+        <button class="btn btn-sm" onclick="shiftWeek(-1)">← Previous</button>
+        <div class="week-title" id="week-title"></div>
+        <button class="btn btn-sm" onclick="shiftWeek(1)">Next →</button>
+      </div>
+      <div class="week-grid" id="week-grid"></div>
+
+      <div style="margin-top: 14px;" class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background: var(--c-dad)"></span>Dad (Tyler)</span>
+        <span class="legend-item"><span class="legend-dot" style="background: var(--c-mom)"></span>Mom (Anali)</span>
+        <span class="legend-item"><span class="legend-dot" style="background: var(--c-gp)"></span>Grandparents</span>
+        <span class="legend-item"><span class="legend-dot" style="background: var(--c-unavail)"></span>Unavailable</span>
+        <span class="legend-item"><span class="legend-dot" style="background: var(--c-school)"></span>Activity</span>
+        <span class="legend-item"><span style="color: var(--c-mom); font-weight: bold;">✓</span>Override synced to GCal</span>
+        <span class="legend-item"><span style="color: var(--c-propose); font-weight: bold;">●</span>Override not yet synced</span>
+      </div>
+      <div id="unsynced-banner" style="margin-top: 12px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Standard weekly template</h2>
+      <div class="page-sub" style="margin-bottom: 12px;">Changes here affect all future weeks. One-off changes can be made by clicking a specific day above.</div>
+      <div id="template-editor"></div>
+      <button class="btn btn-primary" style="margin-top: 12px;" onclick="saveTemplate()">Save template</button>
+    </div>
+
+    <div class="card">
+      <h2>Recurring activities</h2>
+      <div class="page-sub" style="margin-bottom: 12px;">Activities that happen at the same time each week (e.g., Jiu Jitsu Tue &amp; Thu).</div>
+      <div id="activities-list"></div>
+      <button class="btn" onclick="openActivityModal()">＋ Add activity</button>
+    </div>
+  </section>
+
+  <!-- CHANGES -->
+  <section class="view" id="view-changes">
+    <div class="page-header">
+      <div>
+        <h1>Schedule change requests</h1>
+        <div class="page-sub">Propose, accept, modify, or reject schedule changes.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openChangeRequest()">＋ New request</button>
+    </div>
+    <div id="conflict-alert-slot"></div>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" data-tab="pending" onclick="setChangesTab('pending')">Pending</button>
+        <button class="tab" data-tab="accepted" onclick="setChangesTab('accepted')">Accepted</button>
+        <button class="tab" data-tab="rejected" onclick="setChangesTab('rejected')">Rejected</button>
+        <button class="tab" data-tab="all" onclick="setChangesTab('all')">All</button>
+      </div>
+      <div id="changes-list"></div>
+    </div>
+  </section>
+
+  <!-- TRAVEL -->
+  <section class="view" id="view-travel">
+    <div class="page-header">
+      <div>
+        <h1>Travel / unavailable</h1>
+        <div class="page-sub">Mark days you're unavailable so the other parent can plan around it.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openTravel()">＋ Mark unavailable</button>
+    </div>
+    <div class="card">
+      <div id="travel-list"></div>
+    </div>
+  </section>
+
+  <!-- ROUTINES -->
+  <section class="view" id="view-routines">
+    <div class="page-header">
+      <div>
+        <h1>Daily routines</h1>
+        <div class="page-sub">Consistency between households: hygiene, meals, sleep.</div>
+      </div>
+    </div>
+    <div class="grid grid-3">
+      <div class="card">
+        <h2>🌅 Morning</h2>
+        <div id="routine-morning"></div>
+        <button class="btn btn-sm" style="margin-top: 10px;" onclick="editRoutine('morning')">Edit</button>
+      </div>
+      <div class="card">
+        <h2>🏫 After school</h2>
+        <div id="routine-afternoon"></div>
+        <button class="btn btn-sm" style="margin-top: 10px;" onclick="editRoutine('afternoon')">Edit</button>
+      </div>
+      <div class="card">
+        <h2>🌙 Bedtime</h2>
+        <div id="routine-bedtime"></div>
+        <button class="btn btn-sm" style="margin-top: 10px;" onclick="editRoutine('bedtime')">Edit</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🍎 Meal plan &amp; preferences</h2>
+      <textarea id="meal-notes" placeholder="Favorite breakfasts, dislikes, allergies, portion notes..."></textarea>
+      <button class="btn btn-sm" style="margin-top: 8px;" onclick="saveMealNotes()">Save</button>
+    </div>
+  </section>
+
+  <!-- MEDIA -->
+  <section class="view" id="view-media">
+    <div class="page-header">
+      <div>
+        <h1>Approved media</h1>
+        <div class="page-sub">Movies, shows, games, and content both parents have agreed to.</div>
+      </div>
+    </div>
+    <div class="grid grid-2">
+      <div class="card">
+        <h2>✅ Approved</h2>
+        <div id="media-approved"></div>
+        <div style="display:flex; gap:8px; margin-top: 12px;">
+          <input id="media-new-approved" placeholder="Movie / show / game name" onkeydown="if(event.key==='Enter'){addMedia('approved'); event.preventDefault();}">
+          <button class="btn btn-primary btn-sm" onclick="addMedia('approved')">Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🚫 Not approved</h2>
+        <div id="media-blocked"></div>
+        <div style="display:flex; gap:8px; margin-top: 12px;">
+          <input id="media-new-blocked" placeholder="Content to flag" onkeydown="if(event.key==='Enter'){addMedia('blocked'); event.preventDefault();}">
+          <button class="btn btn-sm" onclick="addMedia('blocked')">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📏 Rules &amp; screen-time limits</h2>
+      <textarea id="media-rules" placeholder="e.g., No screens during meals. 30 min after school, 1 hour weekends. No YouTube Shorts. Parental controls: ..."></textarea>
+      <button class="btn btn-sm" style="margin-top: 8px;" onclick="saveMediaRules()">Save</button>
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section class="view" id="view-info">
+    <div class="page-header">
+      <div>
+        <h1>Info bank</h1>
+        <div class="page-sub">Emergency, medical, school, and other essential info.</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h2>🚨 Emergency contacts</h2>
+        <div id="contacts-list"></div>
+        <button class="btn btn-sm" style="margin-top: 8px;" onclick="openContactModal()">＋ Add contact</button>
+      </div>
+
+      <div class="card">
+        <h2>💊 Medical</h2>
+        <label>Pediatrician</label><input id="med-pediatrician">
+        <label>Pediatrician phone</label><input id="med-ped-phone">
+        <label>Insurance carrier / policy #</label><input id="med-insurance">
+        <label>Allergies</label><textarea id="med-allergies" placeholder="Food, meds, environmental"></textarea>
+        <label>Current medications</label><textarea id="med-meds" placeholder="Name, dose, schedule"></textarea>
+        <label>Medical notes</label><textarea id="med-notes" placeholder="Conditions, recent visits, vaccinations"></textarea>
+        <button class="btn btn-sm" style="margin-top: 10px;" onclick="saveMedical()">Save medical</button>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h2>🏫 School</h2>
+        <label>School name</label><input id="sch-name">
+        <label>Teacher</label><input id="sch-teacher">
+        <label>School phone</label><input id="sch-phone">
+        <label>Portal URL</label><input id="sch-portal" placeholder="https://...">
+        <label>Drop-off / pickup times</label><input id="sch-times">
+        <label>Authorized pickups (besides parents)</label><textarea id="sch-pickups"></textarea>
+        <button class="btn btn-sm" style="margin-top: 10px;" onclick="saveSchool()">Save school</button>
+      </div>
+
+      <div class="card">
+        <h2>👕 Packing list (handoff)</h2>
+        <div class="page-sub" style="margin-bottom: 8px;">Items to verify at each handoff.</div>
+        <div id="packing-list"></div>
+        <div style="display:flex; gap:8px; margin-top: 10px;">
+          <input id="packing-new" placeholder="e.g., Jiu Jitsu gi, inhaler, stuffed animal" onkeydown="if(event.key==='Enter'){addPackingItem(); event.preventDefault();}">
+          <button class="btn btn-primary btn-sm" onclick="addPackingItem()">Add</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCUMENTS -->
+  <section class="view" id="view-documents">
+    <div class="page-header">
+      <div>
+        <h1>Documents</h1>
+        <div class="page-sub">Links to important documents stored securely in cloud storage.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openDocModal()">＋ Add link</button>
+    </div>
+    <div class="card">
+      <div id="docs-list"></div>
+    </div>
+    <div class="card">
+      <h2>🔒 Cyber-security notes</h2>
+      <ul style="padding-left: 20px; color: var(--ink-soft); font-size: 14px;">
+        <li>Store documents in a shared Google Drive folder with access limited to both parents.</li>
+        <li>Use 2-factor authentication on both parents' Google accounts.</li>
+        <li>Don't store social security numbers, tax docs, or banking info in shared folders — share those individually through encrypted channels.</li>
+        <li>Revoke share access if a device is lost or a relationship changes.</li>
+        <li>This app stores data locally in your browser. Use <b>Export</b> in Settings to back up.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section class="view" id="view-journal">
+    <div class="page-header">
+      <div>
+        <h1>Journal &amp; communication log</h1>
+        <div class="page-sub">Timestamped, tamper-evident log. Entries cannot be edited after saving.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>New entry</h2>
+      <label>Category</label>
+      <select id="journal-category">
+        <option value="note">General note</option>
+        <option value="handoff">Handoff observation</option>
+        <option value="medical">Medical event</option>
+        <option value="behavior">Behavior / mood</option>
+        <option value="communication">Communication with other parent</option>
+        <option value="milestone">Milestone / achievement</option>
+        <option value="incident">Incident</option>
+      </select>
+      <label>Entry</label>
+      <textarea id="journal-input" placeholder="What happened? Be factual and specific. Avoid accusatory language."></textarea>
+      <button class="btn btn-primary" style="margin-top: 10px;" onclick="addJournalEntry()">Save entry (locked after save)</button>
+    </div>
+    <div class="card">
+      <h2>History</h2>
+      <div style="display:flex; gap:8px; margin-bottom: 12px; flex-wrap: wrap;">
+        <select id="journal-filter" onchange="renderJournal()">
+          <option value="all">All categories</option>
+          <option value="note">Notes</option>
+          <option value="handoff">Handoffs</option>
+          <option value="medical">Medical</option>
+          <option value="behavior">Behavior</option>
+          <option value="communication">Communication</option>
+          <option value="milestone">Milestones</option>
+          <option value="incident">Incidents</option>
+        </select>
+        <button class="btn btn-sm" onclick="exportJournal()">Export journal</button>
+      </div>
+      <div id="journal-list"></div>
+    </div>
+  </section>
+
+  <!-- EXPENSES -->
+  <section class="view" id="view-expenses">
+    <div class="page-header">
+      <div>
+        <h1>Expenses</h1>
+        <div class="page-sub">Shared costs. Default split: 50/50 — adjustable per entry.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openExpenseModal()">＋ Add expense</button>
+    </div>
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Total this month</div>
+        <div class="stat-value" id="exp-month">$0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Total this year</div>
+        <div class="stat-value" id="exp-year">$0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Dad owes</div>
+        <div class="stat-value" id="exp-dad-owes" style="color: var(--c-dad)">$0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Mom owes</div>
+        <div class="stat-value" id="exp-mom-owes" style="color: var(--c-mom)">$0</div>
+      </div>
+    </div>
+    <div class="card">
+      <div id="expenses-list"></div>
+    </div>
+  </section>
+
+  <!-- ACTIVITY LOG -->
+  <section class="view" id="view-audit">
+    <div class="page-header">
+      <div>
+        <h1>Activity log</h1>
+        <div class="page-sub">Append-only record of every change made in the app — who, what, when.</div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" onclick="exportAuditCSV()">Export CSV</button>
+        <button class="btn btn-ghost" onclick="clearAuditLog()">Clear older than 90 days</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex; gap:8px; margin-bottom: 12px; flex-wrap: wrap;">
+        <select id="audit-filter-actor" onchange="renderAudit()">
+          <option value="all">All users</option>
+          <option value="dad">Dad</option>
+          <option value="mom">Mom</option>
+          <option value="other">Other</option>
+        </select>
+        <select id="audit-filter-action" onchange="renderAudit()">
+          <option value="all">All actions</option>
+          <option value="schedule">Schedule changes</option>
+          <option value="request">Change requests</option>
+          <option value="travel">Travel / unavailable</option>
+          <option value="info">Info updates</option>
+          <option value="media">Media updates</option>
+          <option value="routines">Routines</option>
+          <option value="expenses">Expenses</option>
+          <option value="journal">Journal</option>
+          <option value="documents">Documents</option>
+          <option value="settings">Settings</option>
+          <option value="system">System</option>
+        </select>
+      </div>
+      <div id="audit-list"></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view" id="view-settings">
+    <div class="page-header">
+      <div>
+        <h1>Settings</h1>
+        <div class="page-sub">Parents, backup, and app preferences.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🙋 Who is using this app?</h2>
+      <p style="color: var(--ink-soft); font-size: 14px;">Set this on each device so the activity log can attribute actions correctly. Updated whenever you save settings.</p>
+      <select id="set-current-user" style="max-width: 280px;">
+        <option value="dad">Dad (Tyler)</option>
+        <option value="mom">Mom (Anali)</option>
+        <option value="other">Other / not sure</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h2>👥 Parents &amp; caregivers</h2>
+      <div class="form-row">
+        <div>
+          <label>Parent A name</label><input id="set-parentA-name">
+          <label>Parent A email</label><input id="set-parentA-email" type="email">
+        </div>
+        <div>
+          <label>Parent B name</label><input id="set-parentB-name">
+          <label>Parent B email</label><input id="set-parentB-email" type="email">
+        </div>
+      </div>
+      <label>Grandparents / other caregivers</label>
+      <input id="set-gp-name" placeholder="Display name on calendar (e.g., Grandparents)">
+      <label>Grandparents email (optional, for change requests)</label>
+      <input id="set-gp-email" type="email">
+      <label>Child name</label><input id="set-child-name">
+      <label>Home timezone (IANA)</label><input id="set-timezone" placeholder="America/Phoenix">
+      <button class="btn btn-primary" style="margin-top: 12px;" onclick="saveSettings()">Save</button>
+    </div>
+
+    <div class="card">
+      <h2>📧 How should emails open?</h2>
+      <p style="color: var(--ink-soft); font-size: 13px; margin-bottom: 8px;">
+        Pick <b>Gmail (web)</b> if you don't want macOS to open Apple Mail / iCloud when the app drafts a message.
+      </p>
+      <select id="set-mail-mode" style="max-width: 320px;">
+        <option value="gmail">Gmail — open in browser (recommended)</option>
+        <option value="mailto">Use OS default (Apple Mail, Outlook, etc.)</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h2>📅 Google Calendar auto-sync</h2>
+      <label style="display:flex; gap:8px; align-items:center;">
+        <input type="checkbox" id="set-autosync" style="width:auto;"> Automatically open Google Calendar to add events when change requests are accepted or travel is marked
+      </label>
+      <p style="color: var(--ink-soft); font-size: 13px; margin-top: 8px;">
+        When enabled, a new tab opens with the event pre-filled — pick the <b>Luca</b> calendar and click Save.
+      </p>
+      <label>Target calendar ID (for reference)</label>
+      <input id="set-gcal-id" placeholder="Luca calendar ID">
+      <button class="btn" style="margin-top: 12px;" onclick="saveGCalSettings()">Save sync prefs</button>
+    </div>
+
+    <div class="card">
+      <h2>📤 Export deviations (.ics)</h2>
+      <p style="color: var(--ink-soft); font-size: 13px;">
+        The Schedule page has an <b>Export deviations (.ics)</b> button. It exports <b>only</b> day overrides and travel entries — <b>never</b> the standard weekly schedule, which already lives on Google Calendar as recurring events. This avoids duplicating what's already there.
+      </p>
+      <p style="color: var(--ink-soft); font-size: 13px;">To import the file into Google Calendar:</p>
+      <ol style="font-size: 14px; color: var(--ink-soft); padding-left: 20px;">
+        <li>Click the button below to open Google Calendar's import page</li>
+        <li>Choose <b>Luca</b> as the destination calendar</li>
+        <li>Select the .ics file you just downloaded</li>
+      </ol>
+      <a class="btn btn-primary" href="https://calendar.google.com/calendar/u/0/r/settings/export" target="_blank">Open Google Calendar Import ↗</a>
+      <p style="color: var(--ink-soft); font-size: 12px; margin-top: 12px;">
+        <b>Tip:</b> after importing, if any override falls on a day where the standard recurring event still exists, delete/shorten just that occurrence in Google Calendar (tap the event on that day → Delete → "This event only").
+      </p>
+      <p style="color: var(--ink-soft); font-size: 12px; margin-top: 8px;">
+        <b>Stop .ics files from auto-opening in Apple Calendar:</b> right-click the downloaded file in Finder → Get Info → "Open with" → choose Google Chrome (or another browser) → click <b>Change All…</b>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>💾 Backup &amp; sync</h2>
+      <p style="color: var(--ink-soft); font-size: 14px;">All data is stored locally in your browser. Export regularly to back up, and to sync across devices (e.g., between you and the other parent).</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn" onclick="exportAllLogged()">⬇ Export all data</button>
+        <label class="btn" style="cursor: pointer;">⬆ Import data<input type="file" accept=".json" onchange="importAll(event)" style="display: none;"></label>
+        <button class="btn btn-danger" onclick="resetAll()">Reset everything</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📅 Google Calendar</h2>
+      <p style="color: var(--ink-soft); font-size: 14px;">This app works alongside the <b>Luca</b> Google Calendar. Accepted change requests and travel entries open directly in Google Calendar for one-click save (when auto-sync is on).</p>
+      <a class="btn" href="https://calendar.google.com/calendar/u/0/r" target="_blank">Open Google Calendar ↗</a>
+    </div>
+
+    <div class="card">
+      <h2>ℹ️ About</h2>
+      <p style="font-size: 14px;">Luca's Hub v1.0 — a free, local-first co-parenting app inspired by OurFamilyWizard and TalkingParents.</p>
+      <p style="font-size: 13px; color: var(--ink-soft);">Data lives in your browser (localStorage). Nothing is sent to any server.</p>
+    </div>
+  </section>
+</main>
+</div>
+
+<!-- Day Detail Modal -->
+<div class="modal-backdrop" id="day-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="day-modal-title">Day</h2>
+      <button class="modal-close" onclick="closeModal('day-modal')">×</button>
+    </div>
+    <div id="day-modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('day-modal')">Close</button>
+      <button class="btn btn-primary" onclick="saveDayOverride()">Save override</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Request Modal -->
+<div class="modal-backdrop" id="change-modal">
+  <div class="modal" style="max-width: 620px;">
+    <div class="modal-head">
+      <h2>Propose a schedule change</h2>
+      <button class="modal-close" onclick="closeModal('change-modal')">×</button>
+    </div>
+    <div class="alert alert-info" style="font-size: 13px; margin-bottom: 14px;">
+      Specify the <b>exact window</b> (days and times). Overlaps are supported — e.g., swap only the afternoon of one day, or multiple consecutive days.
+    </div>
+    <div class="form-row">
+      <div><label>Requested by</label><select id="cr-by"></select></div>
+      <div><label>To (approver)</label><select id="cr-to"></select></div>
+    </div>
+
+    <h3 style="margin-top: 16px;">Window being changed</h3>
+    <div class="form-row">
+      <div><label>Start date</label><input type="date" id="cr-start-date"></div>
+      <div><label>Start time</label><input type="time" id="cr-start-time" value="00:00"></div>
+    </div>
+    <div class="form-row">
+      <div><label>End date</label><input type="date" id="cr-end-date"></div>
+      <div><label>End time</label><input type="time" id="cr-end-time" value="23:59"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Currently scheduled with</label><select id="cr-orig-who"><option value="dad">Dad</option><option value="mom">Mom</option><option value="gp">Grandparents</option></select></div>
+      <div><label>Would instead be with</label><select id="cr-new-who"><option value="dad">Dad</option><option value="mom">Mom</option><option value="gp">Grandparents</option></select></div>
+    </div>
+
+    <label>Reason</label>
+    <textarea id="cr-reason" placeholder="Brief explanation..."></textarea>
+    <label>Makeup time offered (optional)</label>
+    <input id="cr-makeup" placeholder="e.g., Dad takes the following Saturday 9am–6pm in exchange">
+
+    <label style="display:flex; gap:8px; align-items:center; margin-top: 12px;">
+      <input type="checkbox" id="cr-send-email" checked style="width:auto;"> Email the proposal to the other parent on save
+    </label>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('change-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitChangeRequest()">Save request</button>
+    </div>
+  </div>
+</div>
+
+<!-- Travel Modal -->
+<div class="modal-backdrop" id="travel-modal">
+  <div class="modal" style="max-width: 580px;">
+    <div class="modal-head">
+      <h2>Mark unavailable / travel</h2>
+      <button class="modal-close" onclick="closeModal('travel-modal')">×</button>
+    </div>
+    <label>Who</label>
+    <select id="tv-who"></select>
+    <div class="form-row">
+      <div><label>From date</label><input type="date" id="tv-start-date"></div>
+      <div><label>From time</label><input type="time" id="tv-start-time" value="00:00"></div>
+    </div>
+    <div class="form-row">
+      <div><label>To date</label><input type="date" id="tv-end-date"></div>
+      <div><label>To time</label><input type="time" id="tv-end-time" value="23:59"></div>
+    </div>
+    <label>Reason (shown on calendar)</label>
+    <input id="tv-reason" placeholder="Travel, work, appointment...">
+    <label>Notes (optional)</label>
+    <textarea id="tv-notes"></textarea>
+
+    <label style="display:flex; gap:8px; align-items:center; margin-top: 12px;">
+      <input type="checkbox" id="tv-push-gcal" checked style="width:auto;"> Add to Google Calendar
+    </label>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('travel-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitTravel()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Contact Modal -->
+<div class="modal-backdrop" id="contact-modal">
+  <div class="modal">
+    <div class="modal-head"><h2>Emergency contact</h2><button class="modal-close" onclick="closeModal('contact-modal')">×</button></div>
+    <label>Name</label><input id="ct-name">
+    <label>Relationship</label><input id="ct-rel" placeholder="e.g., Grandma, Pediatrician, Neighbor">
+    <label>Phone</label><input id="ct-phone">
+    <label>Notes</label><input id="ct-notes">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('contact-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveContact()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Document Modal -->
+<div class="modal-backdrop" id="doc-modal">
+  <div class="modal">
+    <div class="modal-head"><h2>Document link</h2><button class="modal-close" onclick="closeModal('doc-modal')">×</button></div>
+    <label>Title</label><input id="dc-title">
+    <label>Category</label><select id="dc-cat">
+      <option>Legal</option><option>Medical</option><option>School</option><option>Insurance</option><option>Financial</option><option>Other</option>
+    </select>
+    <label>URL</label><input id="dc-url" placeholder="https://drive.google.com/...">
+    <label>Notes</label><input id="dc-notes">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('doc-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Expense Modal -->
+<div class="modal-backdrop" id="expense-modal">
+  <div class="modal">
+    <div class="modal-head"><h2>Expense</h2><button class="modal-close" onclick="closeModal('expense-modal')">×</button></div>
+    <label>Description</label><input id="ex-desc">
+    <div class="form-row">
+      <div><label>Amount ($)</label><input id="ex-amt" type="number" step="0.01"></div>
+      <div><label>Date</label><input id="ex-date" type="date"></div>
+    </div>
+    <label>Category</label><select id="ex-cat">
+      <option>Medical</option><option>School</option><option>Activities</option><option>Clothing</option><option>Food</option><option>Other</option>
+    </select>
+    <label>Paid by</label><select id="ex-paid"></select>
+    <div class="form-row">
+      <div><label>Dad's share (%)</label><input id="ex-split-dad" type="number" value="50" min="0" max="100"></div>
+      <div><label>Mom's share (%)</label><input id="ex-split-mom" type="number" value="50" min="0" max="100"></div>
+    </div>
+    <label>Receipt URL (optional)</label><input id="ex-receipt" placeholder="Drive link">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('expense-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveExpense()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Activity Modal -->
+<div class="modal-backdrop" id="activity-modal">
+  <div class="modal">
+    <div class="modal-head"><h2>Recurring activity</h2><button class="modal-close" onclick="closeModal('activity-modal')">×</button></div>
+    <label>Activity name</label><input id="ac-name" placeholder="e.g., Jiu Jitsu Class">
+    <label>Days</label>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+      <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="ac-d0" style="width:auto"> Sun</label>
+      <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="ac-d1" style="width:auto"> Mon</label>
+      <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="ac-d2" style="width:auto"> Tue</label>
+      <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="ac-d3" style="width:auto"> Wed</label>
+      <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="ac-d4" style="width:auto"> Thu</label>
+      <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="ac-d5" style="width:auto"> Fri</label>
+      <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="ac-d6" style="width:auto"> Sat</label>
+    </div>
+    <div class="form-row">
+      <div><label>Start time</label><input id="ac-start" type="time"></div>
+      <div><label>End time</label><input id="ac-end" type="time"></div>
+    </div>
+    <label>Location</label><input id="ac-loc">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('activity-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveActivity()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Routine Edit Modal -->
+<div class="modal-backdrop" id="routine-modal">
+  <div class="modal">
+    <div class="modal-head"><h2 id="routine-modal-title">Edit routine</h2><button class="modal-close" onclick="closeModal('routine-modal')">×</button></div>
+    <p class="page-sub">One step per line. Format: <code>HH:MM Task description</code> or just <code>Task description</code>.</p>
+    <textarea id="routine-text" style="min-height: 260px; font-family: ui-monospace, SFMono-Regular, Monaco, Consolas, monospace; font-size: 13px;"></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('routine-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRoutine()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+const STORAGE_KEY = 'luca-hub-v1';
+const DEFAULT_STATE = {
+  settings: {
+    parentA: { name: 'Tyler', email: 'patrick.dilalla@gmail.com', role: 'dad' },
+    parentB: { name: 'Anali', email: '88.anali@gmail.com', role: 'mom' },
+    grandparents: { name: 'Grandparents', email: '' },
+    childName: 'Luca',
+    timezone: 'America/Phoenix',
+    currentUser: 'dad',   // who is using the app right now: 'dad' | 'mom' | 'other'
+    googleCalendarId: '015f7aceb506e9a3765479dd00e103e8c7118509d651dd6e0376dafcb1380b32@group.calendar.google.com',
+    autoSyncGoogle: true,  // open Google Calendar on change accept / travel save
+    mailMode: 'gmail'     // 'gmail' opens web compose, 'mailto' uses OS default
+  },
+  auditLog: [],         // [{id, ts, actor, action, summary, data}]
+  template: {
+    // Standard weekly schedule as blocks. Day index 0=Sun, 6=Sat.
+    // Each block: { who, startDay, startTime, endDay, endTime }
+    blocks: [
+      { who: 'dad',  startDay: 0, startTime: '18:00', endDay: 3, endTime: '08:30' },
+      { who: 'mom',  startDay: 3, startTime: '16:00', endDay: 6, endTime: '18:00' },
+      { who: 'gp',   startDay: 6, startTime: '18:00', endDay: 0, endTime: '18:00' }
+    ]
+  },
+  activities: [
+    { id: 'jj', name: 'Jiu Jitsu', days: [2, 4], start: '16:30', end: '17:30', location: '' }
+  ],
+  overrides: {},    // key: 'YYYY-MM-DD', value: { blocks: [...] }
+  travel: [],       // [{id, who, start, end, reason, notes, createdAt}]
+  changes: [],      // [{id, byEmail, toEmail, origDate, origWho, newDate, newWho, reason, makeup, status, created, replyNotes}]
+  routines: {
+    morning: `06:30 Wake up
+06:40 Bathroom & brush teeth
+06:50 Get dressed
+07:00 Breakfast
+07:25 Pack backpack & grab jiu jitsu gear (Tue/Thu)
+07:40 Leave for school`,
+    afternoon: `15:30 Pickup / snack
+16:00 Homework
+16:30 Jiu Jitsu (Tue & Thu)
+17:30 Free play / outside
+18:00 Dinner`,
+    bedtime: `19:30 Bath
+19:50 Pajamas & brush teeth
+20:00 Read story
+20:15 Lights out`
+  },
+  mealNotes: '',
+  media: {
+    approved: [
+      { title: 'Bluey', tag: 'TV • PG' },
+      { title: 'Paw Patrol', tag: 'TV • G' },
+      { title: 'The Lego Movie', tag: 'Movie • PG' }
+    ],
+    blocked: [],
+    rules: `• No screens during meals\n• 30 min on weekdays, 1 hr on weekends\n• No YouTube Shorts\n• All content must be approved in advance by both parents`
+  },
+  packing: ['Jiu jitsu gi', 'Favorite stuffed animal', 'Toothbrush', 'Water bottle'],
+  contacts: [],
+  medical: { pediatrician: '', pedPhone: '', insurance: '', allergies: '', meds: '', notes: '' },
+  school: { name: '', teacher: '', phone: '', portal: '', times: '', pickups: '' },
+  documents: [
+    { id: 'd1', title: "Luca's Important Documents (Drive)", category: 'Other', url: 'https://drive.google.com/drive/folders/16oWuV9WtstBcoMtpfWy9yNUeAsfdE7aL?usp=drive_link', notes: 'Medical, school, insurance, legal' }
+  ],
+  journal: [],
+  expenses: []
+};
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return mergeDeep(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed);
+    }
+  } catch (e) { console.error(e); }
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+function mergeDeep(target, source) {
+  for (const k in source) {
+    if (source[k] && typeof source[k] === 'object' && !Array.isArray(source[k])) {
+      if (!target[k]) target[k] = {};
+      mergeDeep(target[k], source[k]);
+    } else {
+      target[k] = source[k];
+    }
+  }
+  return target;
+}
+
+// ===== AUDIT LOG =====
+function actorLabel() {
+  const u = state.settings.currentUser || 'other';
+  if (u === 'dad') return state.settings.parentA.name + ' (Dad)';
+  if (u === 'mom') return state.settings.parentB.name + ' (Mom)';
+  return 'Other';
+}
+function logAction(action, summary, data) {
+  state.auditLog.unshift({
+    id: 'log' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    ts: new Date().toISOString(),
+    actor: actorLabel(),
+    actorId: state.settings.currentUser || 'other',
+    action,
+    summary: summary || '',
+    data: data || null
+  });
+  // cap at 2000 entries
+  if (state.auditLog.length > 2000) state.auditLog.length = 2000;
+}
+
+// ===== GOOGLE CALENDAR INTEGRATION =====
+// Format: 20260426T180000 (no Z, with ctz param)
+function gcalDate(d) {
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + 'T' +
+         p(d.getHours()) + p(d.getMinutes()) + '00';
+}
+function buildGoogleCalendarURL(opts) {
+  // opts: { summary, start (Date), end (Date), description, location }
+  const params = new URLSearchParams();
+  params.set('action', 'TEMPLATE');
+  params.set('text', opts.summary || '');
+  params.set('dates', gcalDate(opts.start) + '/' + gcalDate(opts.end));
+  if (opts.description) params.set('details', opts.description);
+  if (opts.location) params.set('location', opts.location);
+  params.set('ctz', state.settings.timezone || 'America/Phoenix');
+  return 'https://calendar.google.com/calendar/render?' + params.toString();
+}
+// Combine a YYYY-MM-DD date string and HH:MM time into a local Date
+function combineDateTime(dateStr, timeStr) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const [h,mm] = (timeStr || '00:00').split(':').map(Number);
+  return new Date(y, m-1, d, h, mm, 0, 0);
+}
+// Open Google Calendar with pre-filled event (user clicks "Save")
+function pushToGoogleCalendar(opts) {
+  if (!state.settings.autoSyncGoogle) return;
+  const url = buildGoogleCalendarURL(opts);
+  window.open(url, '_blank');
+}
+
+// Mark an override date as pushed (so export doesn't re-emit it)
+function markOverridePushed(dateKey) {
+  if (state.overrides[dateKey]) {
+    state.overrides[dateKey].pushed = true;
+    state.overrides[dateKey].pushedAt = new Date().toISOString();
+  }
+}
+function markTravelPushed(id) {
+  const t = state.travel.find(t => t.id === id);
+  if (t) {
+    t.pushed = true;
+    t.pushedAt = new Date().toISOString();
+  }
+}
+
+// ===== MAIL COMPOSE =====
+// Bypasses OS mail handler by opening Gmail's web compose in a new tab
+function composeMail(to, subject, body) {
+  const mode = state.settings.mailMode || 'gmail';
+  if (mode === 'gmail') {
+    // Gmail web compose URL — opens in new tab, never touches Apple Mail / iCloud
+    const params = new URLSearchParams();
+    params.set('view', 'cm');
+    params.set('fs', '1');
+    if (to) params.set('to', to);
+    if (subject) params.set('su', subject);
+    if (body) params.set('body', body);
+    const url = 'https://mail.google.com/mail/?' + params.toString();
+    window.open(url, '_blank');
+  } else {
+    // Classic mailto (OS default)
+    const href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = href;
+  }
+}
+
+// ===== HELPERS =====
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYS_LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function todayLocal() {
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  return d;
+}
+function formatDateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+function parseDateKey(k) {
+  const [y,m,d] = k.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function addDays(d, n) {
+  const nd = new Date(d);
+  nd.setDate(nd.getDate()+n);
+  return nd;
+}
+function startOfWeek(d) { // Sunday start
+  const nd = new Date(d);
+  nd.setHours(0,0,0,0);
+  nd.setDate(nd.getDate() - nd.getDay());
+  return nd;
+}
+function fmtTime(hhmm) {
+  if (!hhmm) return '';
+  const [h,m] = hhmm.split(':').map(Number);
+  const ampm = h >= 12 ? 'pm' : 'am';
+  const h12 = h === 0 ? 12 : (h > 12 ? h - 12 : h);
+  return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2,'0')}${ampm}`;
+}
+function whoLabel(w) {
+  if (w === 'dad') return state.settings.parentA.name;
+  if (w === 'mom') return state.settings.parentB.name;
+  if (w === 'gp') return state.settings.grandparents.name;
+  return w;
+}
+function whoEmail(w) {
+  if (w === 'dad') return state.settings.parentA.email;
+  if (w === 'mom') return state.settings.parentB.email;
+  if (w === 'gp') return state.settings.grandparents.email;
+  return '';
+}
+function whoRoleClass(w) { return w; }
+
+// Compute the blocks for a specific date (consider overrides, template, travel)
+function blocksForDate(date) {
+  const key = formatDateKey(date);
+  // Override first
+  if (state.overrides[key]) return state.overrides[key].blocks;
+
+  // Template: for each template block, figure out which portion falls on this date
+  const dow = date.getDay();
+  const blocks = [];
+  for (const b of state.template.blocks) {
+    // Block spans from (startDay, startTime) to (endDay, endTime), possibly crossing week boundary.
+    // Translate to "distance from startDay" of this dow.
+    const daysAfterStart = (dow - b.startDay + 7) % 7;
+    const duration = (b.endDay - b.startDay + 7) % 7;
+    if (duration === 0 && b.startDay === b.endDay && b.startTime < b.endTime) {
+      // same-day block
+      if (dow === b.startDay) blocks.push({ who: b.who, start: b.startTime, end: b.endTime });
+      continue;
+    }
+    if (daysAfterStart <= duration) {
+      // today falls in block range
+      let start, end;
+      if (daysAfterStart === 0) start = b.startTime; else start = '00:00';
+      if (daysAfterStart === duration) end = b.endTime; else end = '23:59';
+      blocks.push({ who: b.who, start, end });
+    }
+  }
+  return blocks;
+}
+
+// Primary "who" for a given date (longest block)
+function primaryWho(date) {
+  const blocks = blocksForDate(date);
+  if (!blocks.length) return null;
+  let best = blocks[0], bestLen = -1;
+  for (const b of blocks) {
+    const len = minutesOf(b.end) - minutesOf(b.start);
+    if (len > bestLen) { bestLen = len; best = b; }
+  }
+  return best.who;
+}
+function minutesOf(hhmm) {
+  const [h,m] = hhmm.split(':').map(Number);
+  return h*60+m;
+}
+
+// Who has Luca RIGHT NOW
+function currentWho() {
+  const now = new Date();
+  const blocks = blocksForDate(now);
+  const mins = now.getHours()*60 + now.getMinutes();
+  for (const b of blocks) {
+    if (mins >= minutesOf(b.start) && mins <= minutesOf(b.end)) return b.who;
+  }
+  return blocks.length ? blocks[0].who : null;
+}
+function nextTransition() {
+  const now = new Date();
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(now, i);
+    const blocks = blocksForDate(d);
+    for (const b of blocks) {
+      const [h,m] = b.start.split(':').map(Number);
+      const bt = new Date(d); bt.setHours(h,m,0,0);
+      if (bt > now) return { who: b.who, at: bt };
+    }
+  }
+  return null;
+}
+
+// Check if a date has travel
+function travelOnDate(date) {
+  const key = formatDateKey(date);
+  return state.travel.filter(t => key >= t.start && key <= t.end);
+}
+function activitiesOnDate(date) {
+  const dow = date.getDay();
+  return state.activities.filter(a => a.days.includes(dow));
+}
+
+// ===== RENDER: DASHBOARD =====
+function renderDashboard() {
+  const today = todayLocal();
+  const now = new Date();
+  document.getElementById('today-label').textContent =
+    DAYS_LONG[today.getDay()] + ', ' + MONTHS[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
+
+  const who = currentWho();
+  const slot = document.getElementById('now-card-slot');
+  const name = who ? whoLabel(who) : '—';
+  const blocks = blocksForDate(now);
+  const currentBlock = blocks.find(b => {
+    const mins = now.getHours()*60 + now.getMinutes();
+    return mins >= minutesOf(b.start) && mins <= minutesOf(b.end);
+  });
+  slot.innerHTML = `<div class="now-card ${who||''}">
+    <div class="now-label">Right now, ${state.settings.childName} is with</div>
+    <div class="now-who">${name}</div>
+    <div class="now-sub">${currentBlock ? `Until ${fmtTime(currentBlock.end)}` : 'Transition in progress'}</div>
+  </div>`;
+
+  const nt = nextTransition();
+  if (nt) {
+    const days = Math.floor((nt.at - now) / (1000*60*60*24));
+    const label = days === 0 ? `Today ${fmtTime(nt.at.toTimeString().slice(0,5))}` :
+                  days === 1 ? `Tomorrow ${fmtTime(nt.at.toTimeString().slice(0,5))}` :
+                  `${DAYS[nt.at.getDay()]} ${nt.at.getMonth()+1}/${nt.at.getDate()} ${fmtTime(nt.at.toTimeString().slice(0,5))}`;
+    document.getElementById('stat-transition').textContent = label + ' → ' + whoLabel(nt.who);
+  } else {
+    document.getElementById('stat-transition').textContent = '—';
+  }
+
+  // Count days this week
+  const wkStart = startOfWeek(today);
+  let dadD = 0, momD = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(wkStart, i);
+    const p = primaryWho(d);
+    if (p === 'dad') dadD++;
+    if (p === 'mom') momD++;
+  }
+  document.getElementById('stat-dad').textContent = dadD;
+  document.getElementById('stat-mom').textContent = momD;
+  document.getElementById('stat-requests').textContent = state.changes.filter(c => c.status === 'pending').length;
+
+  // Week at a glance
+  const wkHtml = [];
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(wkStart, i);
+    const p = primaryWho(d);
+    const isToday = formatDateKey(d) === formatDateKey(today);
+    wkHtml.push(`<div class="list-item">
+      <div class="list-main">
+        <div class="list-title">${DAYS_LONG[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}${isToday?' <span class="badge badge-propose">Today</span>':''}</div>
+        <div class="list-sub">${blocksForDate(d).map(b=>`${whoLabel(b.who)} ${fmtTime(b.start)}–${fmtTime(b.end)}`).join(' · ')}</div>
+      </div>
+      <span class="badge badge-${p||'school'}">${p?whoLabel(p):'—'}</span>
+    </div>`);
+  }
+  document.getElementById('dash-week').innerHTML = wkHtml.join('');
+
+  // Today's timeline
+  const tl = [];
+  const todayBlocks = blocksForDate(today);
+  for (const b of todayBlocks) {
+    tl.push(`<div class="timeline-item">
+      <div class="timeline-time">${fmtTime(b.start)} – ${fmtTime(b.end)}</div>
+      <div class="timeline-text">With <b>${whoLabel(b.who)}</b></div>
+    </div>`);
+  }
+  for (const a of activitiesOnDate(today)) {
+    tl.push(`<div class="timeline-item">
+      <div class="timeline-time">${fmtTime(a.start)} – ${fmtTime(a.end)}</div>
+      <div class="timeline-text">🎯 ${a.name}${a.location?` <span class="media-tag">${a.location}</span>`:''}</div>
+    </div>`);
+  }
+  for (const t of travelOnDate(today)) {
+    tl.push(`<div class="timeline-item">
+      <div class="timeline-time">All day</div>
+      <div class="timeline-text">🚨 ${whoLabel(t.who)} unavailable: ${t.reason||'—'}</div>
+    </div>`);
+  }
+  document.getElementById('dash-today').innerHTML = tl.length ? `<div class="timeline">${tl.join('')}</div>` : '<div class="empty">Nothing scheduled.</div>';
+}
+
+// ===== RENDER: SCHEDULE =====
+let weekOffset = 0;
+function setWeekOffset(n) { weekOffset = n; renderSchedule(); }
+function shiftWeek(n) { weekOffset += n; renderSchedule(); }
+
+function renderSchedule() {
+  const today = todayLocal();
+  const wkStart = addDays(startOfWeek(today), weekOffset * 7);
+  const wkEnd = addDays(wkStart, 6);
+  document.getElementById('week-title').textContent =
+    `${MONTHS[wkStart.getMonth()]} ${wkStart.getDate()} – ${MONTHS[wkEnd.getMonth()]} ${wkEnd.getDate()}, ${wkEnd.getFullYear()}`;
+
+  const grid = document.getElementById('week-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(wkStart, i);
+    const isToday = formatDateKey(d) === formatDateKey(today);
+    const isOverride = !!state.overrides[formatDateKey(d)];
+    const blocks = blocksForDate(d);
+    const travel = travelOnDate(d);
+    const acts = activitiesOnDate(d);
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (isToday ? ' today' : '');
+    cell.onclick = () => openDayModal(d);
+    const overridePushed = isOverride && state.overrides[formatDateKey(d)].pushed;
+    const syncDot = isOverride ? (overridePushed ? '<span title="Override synced to Google Calendar" style="position:absolute; top:8px; right:8px; font-size:10px; color: var(--c-mom);">✓</span>' : '<span title="Override NOT yet synced to Google Calendar" style="position:absolute; top:8px; right:8px; font-size:10px; color: var(--c-propose);">●</span>') : '';
+    cell.innerHTML = `
+      ${syncDot}
+      <div class="day-head">
+        <div class="day-name">${DAYS[d.getDay()]}</div>
+        <div class="day-date">${d.getDate()}</div>
+      </div>
+      ${blocks.map(b => `<div class="day-block ${b.who} ${isOverride?'override':''}">${whoLabel(b.who)} ${fmtTime(b.start)}–${fmtTime(b.end)}</div>`).join('')}
+      ${acts.map(a => `<div class="day-block activity">${fmtTime(a.start)} ${a.name}</div>`).join('')}
+      ${travel.map(t => `<div class="day-block unavail">${whoLabel(t.who)} away</div>`).join('')}
+    `;
+    grid.appendChild(cell);
+  }
+
+  renderTemplateEditor();
+  renderActivities();
+  renderUnsyncedBanner();
+}
+function renderUnsyncedBanner() {
+  const el = document.getElementById('unsynced-banner');
+  if (!el) return;
+  const unsyncedOverrides = Object.entries(state.overrides).filter(([k,v]) => v && v.blocks && v.blocks.length && !v.pushed).length;
+  const unsyncedTravel = state.travel.filter(t => !t.pushed).length;
+  const total = unsyncedOverrides + unsyncedTravel;
+  if (total === 0) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `<div class="alert alert-warn" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <div>
+      <b>${total} deviation${total===1?'':'s'} not yet on Google Calendar</b>
+      <span style="font-size: 13px; display: block; margin-top: 2px;">
+        ${unsyncedOverrides > 0 ? `${unsyncedOverrides} override${unsyncedOverrides===1?'':'s'}` : ''}${unsyncedOverrides > 0 && unsyncedTravel > 0 ? ' · ' : ''}${unsyncedTravel > 0 ? `${unsyncedTravel} travel entr${unsyncedTravel===1?'y':'ies'}` : ''}
+      </span>
+    </div>
+    <button class="btn btn-sm btn-primary" onclick="exportICS()">Export unsynced → .ics</button>
+  </div>`;
+}
+
+function renderTemplateEditor() {
+  const el = document.getElementById('template-editor');
+  const rows = state.template.blocks.map((b, idx) => `
+    <div class="expense-row" style="grid-template-columns: 140px 1fr 1fr auto;">
+      <select onchange="state.template.blocks[${idx}].who=this.value">
+        <option value="dad" ${b.who==='dad'?'selected':''}>Dad</option>
+        <option value="mom" ${b.who==='mom'?'selected':''}>Mom</option>
+        <option value="gp" ${b.who==='gp'?'selected':''}>Grandparents</option>
+      </select>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <select onchange="state.template.blocks[${idx}].startDay=+this.value" style="width: 80px;">
+          ${DAYS.map((d,i)=>`<option value="${i}" ${b.startDay===i?'selected':''}>${d}</option>`).join('')}
+        </select>
+        <input type="time" value="${b.startTime}" onchange="state.template.blocks[${idx}].startTime=this.value" style="width: 110px;">
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="color:var(--ink-soft); font-size:12px;">to</span>
+        <select onchange="state.template.blocks[${idx}].endDay=+this.value" style="width: 80px;">
+          ${DAYS.map((d,i)=>`<option value="${i}" ${b.endDay===i?'selected':''}>${d}</option>`).join('')}
+        </select>
+        <input type="time" value="${b.endTime}" onchange="state.template.blocks[${idx}].endTime=this.value" style="width: 110px;">
+      </div>
+      <button class="btn btn-sm btn-ghost" onclick="removeTemplateBlock(${idx})" title="Remove">✕</button>
+    </div>`).join('');
+  el.innerHTML = rows + `
+    <button class="btn btn-sm" style="margin-top: 8px;" onclick="addTemplateBlock()">＋ Add block</button>`;
+}
+function addTemplateBlock() {
+  state.template.blocks.push({ who: 'dad', startDay: 0, startTime: '09:00', endDay: 0, endTime: '17:00' });
+  renderTemplateEditor();
+}
+function removeTemplateBlock(idx) {
+  state.template.blocks.splice(idx, 1);
+  renderTemplateEditor();
+}
+function saveTemplate() {
+  logAction('schedule', 'Updated standard weekly template');
+  saveState();
+  renderSchedule();
+  renderDashboard();
+  renderAudit();
+  toast('Template saved.');
+}
+
+function renderActivities() {
+  const el = document.getElementById('activities-list');
+  if (!state.activities.length) { el.innerHTML = '<div class="empty">No recurring activities.</div>'; return; }
+  el.innerHTML = state.activities.map(a => `
+    <div class="list-item">
+      <div class="list-main">
+        <div class="list-title">${a.name}</div>
+        <div class="list-sub">${a.days.map(d=>DAYS[d]).join(', ')} · ${fmtTime(a.start)}–${fmtTime(a.end)}${a.location?` · ${a.location}`:''}</div>
+      </div>
+      <div class="list-actions">
+        <button class="btn btn-sm btn-ghost" onclick="deleteActivity('${a.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+function openActivityModal() {
+  document.getElementById('ac-name').value = '';
+  for (let i = 0; i < 7; i++) document.getElementById('ac-d'+i).checked = false;
+  document.getElementById('ac-start').value = '16:00';
+  document.getElementById('ac-end').value = '17:00';
+  document.getElementById('ac-loc').value = '';
+  openModal('activity-modal');
+}
+function saveActivity() {
+  const name = document.getElementById('ac-name').value.trim();
+  if (!name) return toast('Name required');
+  const days = [];
+  for (let i = 0; i < 7; i++) if (document.getElementById('ac-d'+i).checked) days.push(i);
+  state.activities.push({
+    id: 'a'+Date.now(), name,
+    days, start: document.getElementById('ac-start').value,
+    end: document.getElementById('ac-end').value,
+    location: document.getElementById('ac-loc').value.trim()
+  });
+  logAction('schedule', `Added recurring activity — ${name} (${days.map(d=>DAYS[d]).join(', ')})`);
+  saveState(); closeModal('activity-modal'); renderSchedule(); renderDashboard(); renderAudit();
+}
+function deleteActivity(id) {
+  if (!confirm('Delete this activity?')) return;
+  const a = state.activities.find(a => a.id === id);
+  state.activities = state.activities.filter(a => a.id !== id);
+  logAction('schedule', `Deleted activity${a ? ' — '+a.name : ''}`);
+  saveState(); renderSchedule(); renderDashboard(); renderAudit();
+}
+
+// ===== DAY OVERRIDE MODAL =====
+let editingDate = null;
+function openDayModal(date) {
+  editingDate = date;
+  const key = formatDateKey(date);
+  const title = `${DAYS_LONG[date.getDay()]} ${MONTHS[date.getMonth()]} ${date.getDate()}`;
+  document.getElementById('day-modal-title').textContent = title;
+  const existing = state.overrides[key] ? state.overrides[key].blocks : blocksForDate(date);
+  const hasOverride = !!state.overrides[key];
+  const isPushed = hasOverride && state.overrides[key].pushed;
+  const body = document.getElementById('day-modal-body');
+  body.innerHTML = `
+    ${hasOverride ? `<div class="alert alert-warn">This day has a custom override (different from the weekly template). ${isPushed ? '<b>✓ Synced</b> to Google Calendar.' : '<b>Not yet synced</b> to Google Calendar.'}</div>` : '<div class="alert alert-info">Following the standard weekly template. Adding any block below creates a one-day override.</div>'}
+    <label>Blocks for this day</label>
+    <div id="day-blocks-list"></div>
+    <button class="btn btn-sm" style="margin-top: 8px;" onclick="addDayBlock()">＋ Add block</button>
+    ${hasOverride ? `
+      <div style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
+        ${!isPushed ? `<button class="btn btn-sm btn-primary" onclick="syncOverrideToGCal('${key}')">📅 Sync to Google Calendar</button>` : `<button class="btn btn-sm btn-ghost" onclick="markOverrideUnpushed('${key}')" title="Mark as not yet synced">↺ Mark unsynced</button>`}
+        <button class="btn btn-sm btn-ghost" onclick="clearDayOverride()">Revert to standard</button>
+      </div>
+    ` : ''}
+  `;
+  editingBlocks = JSON.parse(JSON.stringify(existing));
+  renderDayBlocks();
+  openModal('day-modal');
+}
+
+function syncOverrideToGCal(key) {
+  const override = state.overrides[key];
+  if (!override) return;
+  const d = parseDateKey(key);
+  for (const b of override.blocks) {
+    const [sh,sm] = b.start.split(':').map(Number);
+    const [eh,em] = b.end.split(':').map(Number);
+    const s = new Date(d); s.setHours(sh, sm, 0, 0);
+    const e = new Date(d); e.setHours(eh, em, 0, 0);
+    const emoji = b.who==='dad'?'🔵':b.who==='mom'?'🟢':'🟫';
+    const url = buildGoogleCalendarURL({
+      summary: `${emoji} ${state.settings.childName} — with ${whoLabel(b.who)} (override)`,
+      start: s, end: e,
+      description: `One-day override from Luca's Hub for ${key}. Replaces the standard recurring schedule for this block.\n\nBefore saving: pick the "Luca" calendar from the dropdown at top.\nAfter saving: delete the overlapping recurring event occurrence on this day (Delete → This event only).`
+    });
+    window.open(url, '_blank');
+  }
+  markOverridePushed(key);
+  logAction('schedule', `Synced override for ${key} to Google Calendar`);
+  saveState(); closeModal('day-modal'); renderSchedule(); renderDashboard(); renderAudit();
+  toast('Opened Google Calendar for each block. Future exports will skip this override.');
+}
+function markOverrideUnpushed(key) {
+  if (state.overrides[key]) {
+    state.overrides[key].pushed = false;
+    delete state.overrides[key].pushedAt;
+    saveState(); closeModal('day-modal'); renderSchedule();
+  }
+}
+let editingBlocks = [];
+function renderDayBlocks() {
+  const el = document.getElementById('day-blocks-list');
+  el.innerHTML = editingBlocks.map((b, i) => `
+    <div style="display:grid; grid-template-columns: 100px 1fr 1fr auto; gap: 8px; align-items: center; margin-top: 6px;">
+      <select onchange="editingBlocks[${i}].who=this.value">
+        <option value="dad" ${b.who==='dad'?'selected':''}>Dad</option>
+        <option value="mom" ${b.who==='mom'?'selected':''}>Mom</option>
+        <option value="gp" ${b.who==='gp'?'selected':''}>Grandparents</option>
+      </select>
+      <input type="time" value="${b.start}" onchange="editingBlocks[${i}].start=this.value">
+      <input type="time" value="${b.end}" onchange="editingBlocks[${i}].end=this.value">
+      <button class="btn btn-ghost btn-sm" onclick="editingBlocks.splice(${i},1); renderDayBlocks()">✕</button>
+    </div>`).join('');
+}
+function addDayBlock() { editingBlocks.push({ who: 'dad', start: '09:00', end: '17:00' }); renderDayBlocks(); }
+function saveDayOverride() {
+  const key = formatDateKey(editingDate);
+  state.overrides[key] = { blocks: editingBlocks.slice() };
+  logAction('schedule', `Set one-day override for ${key}: ${editingBlocks.map(b=>whoLabel(b.who)+' '+b.start+'-'+b.end).join(', ')}`);
+  saveState(); closeModal('day-modal'); renderSchedule(); renderDashboard(); renderAudit();
+  toast('Day updated.');
+}
+function clearDayOverride() {
+  const key = formatDateKey(editingDate);
+  delete state.overrides[key];
+  logAction('schedule', `Cleared one-day override for ${key} (reverted to standard)`);
+  saveState(); closeModal('day-modal'); renderSchedule(); renderDashboard(); renderAudit();
+  toast('Reverted to standard.');
+}
+
+// ===== CHANGE REQUESTS =====
+let changesTab = 'pending';
+function setChangesTab(t) {
+  changesTab = t;
+  document.querySelectorAll('#view-changes .tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
+  renderChanges();
+}
+function openChangeRequest() {
+  const fromSel = document.getElementById('cr-by');
+  const toSel = document.getElementById('cr-to');
+  const opts = [
+    ['dad', state.settings.parentA.name + ' (Dad)'],
+    ['mom', state.settings.parentB.name + ' (Mom)']
+  ];
+  fromSel.innerHTML = opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');
+  toSel.innerHTML = opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');
+  // Default "by" to whoever is using the app
+  fromSel.value = state.settings.currentUser === 'mom' ? 'mom' : 'dad';
+  toSel.value = fromSel.value === 'dad' ? 'mom' : 'dad';
+  const t = todayLocal();
+  document.getElementById('cr-start-date').value = formatDateKey(t);
+  document.getElementById('cr-end-date').value = formatDateKey(t);
+  document.getElementById('cr-start-time').value = '00:00';
+  document.getElementById('cr-end-time').value = '23:59';
+  document.getElementById('cr-reason').value = '';
+  document.getElementById('cr-makeup').value = '';
+  document.getElementById('cr-send-email').checked = true;
+  openModal('change-modal');
+}
+
+function submitChangeRequest() {
+  const by = document.getElementById('cr-by').value;
+  const to = document.getElementById('cr-to').value;
+  if (by === to) return toast('Requester and approver must differ.');
+  const startDate = document.getElementById('cr-start-date').value;
+  const endDate = document.getElementById('cr-end-date').value;
+  const startTime = document.getElementById('cr-start-time').value;
+  const endTime = document.getElementById('cr-end-time').value;
+  if (!startDate || !endDate) return toast('Start and end dates required.');
+  const s = combineDateTime(startDate, startTime);
+  const e = combineDateTime(endDate, endTime);
+  if (e <= s) return toast('End must be after start.');
+
+  const req = {
+    id: 'c'+Date.now(),
+    by, to,
+    byName: whoLabel(by), toName: whoLabel(to),
+    byEmail: whoEmail(by), toEmail: whoEmail(to),
+    startDate, startTime, endDate, endTime,
+    origWho: document.getElementById('cr-orig-who').value,
+    newWho: document.getElementById('cr-new-who').value,
+    reason: document.getElementById('cr-reason').value,
+    makeup: document.getElementById('cr-makeup').value,
+    status: 'pending',
+    created: new Date().toISOString(),
+    replyNotes: ''
+  };
+  state.changes.unshift(req);
+  logAction('request', `Created change request — ${fmtRange(req)} (${whoLabel(req.origWho)} → ${whoLabel(req.newWho)})`, { id: req.id });
+  saveState();
+  closeModal('change-modal');
+
+  if (document.getElementById('cr-send-email').checked && req.toEmail) {
+    const subject = `Schedule change request — ${state.settings.childName} — ${req.startDate}`;
+    const body = `Hi ${req.toName},
+
+I'd like to propose a change to ${state.settings.childName}'s schedule.
+
+WINDOW:
+  From: ${req.startDate} ${fmtTime(req.startTime)}
+  To:   ${req.endDate} ${fmtTime(req.endTime)}
+
+  Currently scheduled with: ${whoLabel(req.origWho)}
+  Proposed:                 ${whoLabel(req.newWho)}
+
+Reason: ${req.reason || '—'}
+Makeup time offered: ${req.makeup || '—'}
+
+Please reply Accept / Modify / Reject with any notes, or respond in Luca's Hub.
+— ${req.byName}
+
+(Logged in Luca's Hub · Request ID: ${req.id})`;
+    composeMail(req.toEmail, subject, body);
+  }
+  renderChanges(); renderDashboard();
+  toast('Request saved' + (document.getElementById('cr-send-email').checked ? ' & email drafted.' : '.'));
+}
+
+function fmtRange(c) {
+  if (c.startDate === c.endDate) {
+    return `${c.startDate} ${fmtTime(c.startTime)}–${fmtTime(c.endTime)}`;
+  }
+  return `${c.startDate} ${fmtTime(c.startTime)} → ${c.endDate} ${fmtTime(c.endTime)}`;
+}
+
+function renderChanges() {
+  const el = document.getElementById('changes-list');
+  let items = state.changes;
+  if (changesTab !== 'all') items = items.filter(c => c.status === changesTab);
+  if (!items.length) { el.innerHTML = '<div class="empty">No requests.</div>'; return; }
+  el.innerHTML = items.map(c => {
+    const statusBadge = c.status === 'pending' ? '<span class="badge badge-propose">Pending</span>' :
+                       c.status === 'accepted' ? '<span class="badge badge-mom">Accepted</span>' :
+                       c.status === 'modified' ? '<span class="badge badge-gp">Modified</span>' :
+                       '<span class="badge badge-unavail">Rejected</span>';
+    return `<div class="list-item" style="align-items: flex-start;">
+      <div class="list-main">
+        <div class="list-title">${c.byName} → ${c.toName} ${statusBadge}</div>
+        <div class="list-sub">
+          ${fmtRange(c)} · ${whoLabel(c.origWho)} → ${whoLabel(c.newWho)}
+          ${c.reason ? ' · ' + escapeHtml(c.reason) : ''}
+        </div>
+        ${c.makeup ? `<div class="list-sub" style="margin-top: 2px;"><b>Makeup:</b> ${escapeHtml(c.makeup)}</div>` : ''}
+        ${c.replyNotes ? `<div class="list-sub" style="margin-top: 4px;"><b>Reply:</b> ${escapeHtml(c.replyNotes)}</div>` : ''}
+        <div class="list-sub" style="margin-top: 4px; font-size: 12px;">Created ${new Date(c.created).toLocaleString()}${c.respondedAt?' · Responded '+new Date(c.respondedAt).toLocaleString():''}</div>
+      </div>
+      <div class="list-actions" style="flex-direction: column; gap: 4px;">
+        ${c.status === 'pending' ? `
+          <button class="btn btn-sm btn-primary" onclick="respondChange('${c.id}','accepted')">Accept</button>
+          <button class="btn btn-sm" onclick="respondChange('${c.id}','modified')">Modify</button>
+          <button class="btn btn-sm" onclick="respondChange('${c.id}','rejected')">Reject</button>
+        ` : ''}
+        <button class="btn btn-sm btn-ghost" onclick="deleteChange('${c.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function respondChange(id, status) {
+  const c = state.changes.find(c => c.id === id);
+  if (!c) return;
+  const notes = prompt(`Reply notes (${status}):`, '');
+  if (notes === null) return;
+  c.status = status;
+  c.replyNotes = notes || '';
+  c.respondedAt = new Date().toISOString();
+  c.respondedBy = actorLabel();
+
+  if (status === 'accepted') {
+    applyChangeRequestToOverrides(c);
+    logAction('request', `Accepted change request — ${fmtRange(c)} → ${whoLabel(c.newWho)}`, { id: c.id });
+    // Push to Google Calendar
+    if (state.settings.autoSyncGoogle) {
+      const s = combineDateTime(c.startDate, c.startTime);
+      const e = combineDateTime(c.endDate, c.endTime);
+      const emoji = c.newWho === 'dad' ? '🔵' : c.newWho === 'mom' ? '🟢' : '🟫';
+      pushToGoogleCalendar({
+        summary: `${emoji} ${state.settings.childName} — with ${whoLabel(c.newWho)} (override)`,
+        start: s, end: e,
+        description: `Schedule change accepted via Luca's Hub.\n\nWindow: ${fmtRange(c)}\nOriginal: with ${whoLabel(c.origWho)}\nChanged to: with ${whoLabel(c.newWho)}\nRequested by: ${c.byName}\nReason: ${c.reason || '—'}\nMakeup: ${c.makeup || '—'}\nReply: ${c.replyNotes || '—'}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\nNEXT STEPS:\n1. Before saving, pick the "Luca" calendar from the dropdown at top.\n2. After saving, open Google Calendar for the affected day(s) and DELETE or SHORTEN the standard recurring event (🔵 Dad / 🟢 Mom / 🟫 Grandparents) so it doesn't overlap with this override.\n   • Tap the recurring event on the specific day\n   • Select "Delete" → "This event only" (NOT "All events")`
+      });
+      // Mark each affected override date as pushed
+      let d = new Date(parseDateKey(c.startDate));
+      const ed = parseDateKey(c.endDate);
+      while (d <= ed) { markOverridePushed(formatDateKey(d)); d = addDays(d, 1); }
+      showConflictAlert(c);
+    }
+  } else {
+    logAction('request', `${status.charAt(0).toUpperCase()+status.slice(1)} change request — ${fmtRange(c)}`, { id: c.id });
+  }
+  saveState();
+
+  if (c.byEmail) {
+    const subject = `Re: Schedule change request — ${c.startDate}`;
+    const body = `Response: ${status.toUpperCase()}
+
+${notes || ''}
+
+Original request:
+  ${fmtRange(c)}
+  ${whoLabel(c.origWho)} → ${whoLabel(c.newWho)}
+  Reason: ${c.reason}
+  Makeup: ${c.makeup}
+
+— ${actorLabel()}`;
+    composeMail(c.byEmail, subject, body);
+  }
+
+  renderChanges(); renderDashboard(); renderSchedule(); renderAudit();
+  toast(status === 'accepted' ? 'Accepted — calendar event opening in new tab.' : 'Saved.');
+}
+
+function showConflictAlert(c) {
+  const slot = document.getElementById('conflict-alert-slot');
+  if (!slot) return;
+  const daysList = [];
+  const sd = parseDateKey(c.startDate);
+  const ed = parseDateKey(c.endDate);
+  let d = new Date(sd);
+  while (d <= ed) {
+    daysList.push(`${DAYS[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()}`);
+    d = addDays(d, 1);
+  }
+  slot.innerHTML = `<div class="alert alert-warn" style="margin-bottom: 16px;">
+    <b>Change accepted — one manual step left in Google Calendar.</b><br>
+    The override is now in the app. A new tab just opened with the new event pre-filled.
+    After you save it, open Google Calendar on these day(s) and delete or shorten the original recurring
+    <b>${whoLabel(c.origWho)}</b> event that overlaps the window — otherwise both events will show.<br>
+    <span style="font-size: 13px;">Affected day${daysList.length===1?'':'s'}: <b>${daysList.join(', ')}</b></span><br>
+    <span style="font-size: 13px;">In Google Calendar: tap the recurring event on that day → <b>Delete</b> → <b>This event only</b> (not "All events").</span>
+    <div style="margin-top: 8px;"><button class="btn btn-sm" onclick="document.getElementById('conflict-alert-slot').innerHTML=''">Dismiss</button></div>
+  </div>`;
+}
+
+// Apply a change request to the day overrides by replacing origWho blocks with newWho blocks
+// during the specified window.
+function applyChangeRequestToOverrides(c) {
+  const sd = parseDateKey(c.startDate);
+  const ed = parseDateKey(c.endDate);
+  const startMins = minutesOf(c.startTime);
+  const endMins = minutesOf(c.endTime);
+  let d = new Date(sd);
+  while (d <= ed) {
+    const key = formatDateKey(d);
+    const existing = state.overrides[key] ? state.overrides[key].blocks.map(b=>({...b})) : blocksForDate(d);
+    const windowStart = (formatDateKey(d) === c.startDate) ? startMins : 0;
+    const windowEnd   = (formatDateKey(d) === c.endDate) ? endMins : 24*60-1;
+    const newBlocks = replaceBlocksInWindow(existing, windowStart, windowEnd, c.newWho);
+    state.overrides[key] = { blocks: newBlocks };
+    d = addDays(d, 1);
+  }
+}
+
+// Given block list, a time window, and newWho, split blocks so the window becomes newWho
+function replaceBlocksInWindow(blocks, winStart, winEnd, newWho) {
+  const out = [];
+  for (const b of blocks) {
+    const bs = minutesOf(b.start), be = minutesOf(b.end);
+    // no overlap
+    if (be <= winStart || bs >= winEnd) { out.push({...b}); continue; }
+    // left piece (outside window)
+    if (bs < winStart) out.push({ who: b.who, start: b.start, end: toHHMM(winStart) });
+    // inside window - will be replaced
+    // right piece (outside window)
+    if (be > winEnd) out.push({ who: b.who, start: toHHMM(winEnd), end: b.end });
+  }
+  // insert the new block (merge adjacent if same who)
+  out.push({ who: newWho, start: toHHMM(winStart), end: toHHMM(winEnd) });
+  // sort by start
+  out.sort((a,b) => minutesOf(a.start) - minutesOf(b.start));
+  // merge adjacent same-who blocks
+  const merged = [];
+  for (const b of out) {
+    if (merged.length && merged[merged.length-1].who === b.who &&
+        merged[merged.length-1].end === b.start) {
+      merged[merged.length-1].end = b.end;
+    } else {
+      merged.push({...b});
+    }
+  }
+  return merged;
+}
+function toHHMM(mins) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+
+function deleteChange(id) {
+  if (!confirm('Delete this request from the log?')) return;
+  const c = state.changes.find(c => c.id === id);
+  state.changes = state.changes.filter(c => c.id !== id);
+  logAction('request', `Deleted change request${c ? ' — ' + fmtRange(c) : ''}`, { id });
+  saveState(); renderChanges(); renderDashboard(); renderAudit();
+}
+
+// ===== TRAVEL =====
+function openTravel() {
+  const sel = document.getElementById('tv-who');
+  sel.innerHTML = `
+    <option value="dad">${state.settings.parentA.name} (Dad)</option>
+    <option value="mom">${state.settings.parentB.name} (Mom)</option>`;
+  sel.value = state.settings.currentUser === 'mom' ? 'mom' : 'dad';
+  const t = todayLocal();
+  document.getElementById('tv-start-date').value = formatDateKey(t);
+  document.getElementById('tv-end-date').value = formatDateKey(t);
+  document.getElementById('tv-start-time').value = '00:00';
+  document.getElementById('tv-end-time').value = '23:59';
+  document.getElementById('tv-reason').value = '';
+  document.getElementById('tv-notes').value = '';
+  document.getElementById('tv-push-gcal').checked = state.settings.autoSyncGoogle;
+  openModal('travel-modal');
+}
+function submitTravel() {
+  const startDate = document.getElementById('tv-start-date').value;
+  const endDate = document.getElementById('tv-end-date').value;
+  const startTime = document.getElementById('tv-start-time').value;
+  const endTime = document.getElementById('tv-end-time').value;
+  if (!startDate || !endDate) return toast('Start and end dates required.');
+  const s = combineDateTime(startDate, startTime);
+  const e = combineDateTime(endDate, endTime);
+  if (e <= s) return toast('End must be after start.');
+
+  const t = {
+    id: 't'+Date.now(),
+    who: document.getElementById('tv-who').value,
+    // Keep backward-compat 'start'/'end' (date keys) AND add startTime/endTime
+    start: startDate, end: endDate,
+    startTime, endTime,
+    reason: document.getElementById('tv-reason').value,
+    notes: document.getElementById('tv-notes').value,
+    createdAt: new Date().toISOString(),
+    createdBy: actorLabel()
+  };
+  state.travel.push(t);
+  logAction('travel', `Marked ${whoLabel(t.who)} unavailable ${startDate} ${fmtTime(startTime)} → ${endDate} ${fmtTime(endTime)}${t.reason?' ('+t.reason+')':''}`, { id: t.id });
+  saveState(); closeModal('travel-modal'); renderTravel(); renderSchedule(); renderDashboard(); renderAudit();
+
+  if (document.getElementById('tv-push-gcal').checked) {
+    const emoji = t.who === 'dad' ? '🔴' : '🟠';
+    pushToGoogleCalendar({
+      summary: `${emoji} ${whoLabel(t.who)} UNAVAILABLE${t.reason?' — '+t.reason:''}`,
+      start: s, end: e,
+      description: `${whoLabel(t.who)} is unavailable during this time.\n\nReason: ${t.reason || '—'}\nNotes: ${t.notes || '—'}\nLogged by: ${t.createdBy}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nBefore saving: pick the "Luca" calendar from the dropdown at top.\n\nThis entry is just a flag — it does NOT automatically change who has ${state.settings.childName}. If ${state.settings.childName} was scheduled with ${whoLabel(t.who)} during this window, open Luca's Hub and create a Schedule Change Request so the custody can be reassigned.`
+    });
+    markTravelPushed(t.id);
+    saveState();
+  }
+  toast('Saved.' + (document.getElementById('tv-push-gcal').checked ? ' Google Calendar opening…' : ''));
+}
+function renderTravel() {
+  const el = document.getElementById('travel-list');
+  if (!state.travel.length) { el.innerHTML = '<div class="empty">No unavailability marked.</div>'; return; }
+  const sorted = state.travel.slice().sort((a,b)=>b.start.localeCompare(a.start));
+  el.innerHTML = sorted.map(t => {
+    const startTime = t.startTime || '00:00';
+    const endTime = t.endTime || '23:59';
+    const rangeStr = t.start === t.end
+      ? `${t.start} ${fmtTime(startTime)}–${fmtTime(endTime)}`
+      : `${t.start} ${fmtTime(startTime)} → ${t.end} ${fmtTime(endTime)}`;
+    const pushedBadge = t.pushed ?
+      `<span class="badge badge-mom" title="Synced ${t.pushedAt ? new Date(t.pushedAt).toLocaleString() : ''}">✓ Synced</span>` :
+      `<span class="badge badge-propose" title="Not yet pushed to Google Calendar">● Not synced</span>`;
+    return `<div class="list-item">
+      <div class="list-main">
+        <div class="list-title">${whoLabel(t.who)} — ${t.reason || 'Unavailable'} ${pushedBadge}</div>
+        <div class="list-sub">${rangeStr}${t.notes?' · '+escapeHtml(t.notes):''}${t.createdBy?' · Logged by '+escapeHtml(t.createdBy):''}</div>
+      </div>
+      <div class="list-actions">
+        ${!t.pushed ? `<button class="btn btn-sm btn-primary" onclick="syncTravelToGCal('${t.id}')">📅 Sync to GCal</button>` : `<button class="btn btn-sm btn-ghost" onclick="markTravelUnpushed('${t.id}')" title="Mark as not yet synced (so it shows up in next export)">↺ Mark unsynced</button>`}
+        <button class="btn btn-sm btn-ghost" onclick="deleteTravel('${t.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function syncTravelToGCal(id) {
+  const t = state.travel.find(t => t.id === id);
+  if (!t) return;
+  const s = combineDateTime(t.start, t.startTime || '00:00');
+  const e = combineDateTime(t.end, t.endTime || '23:59');
+  const emoji = t.who === 'dad' ? '🔴' : '🟠';
+  const url = buildGoogleCalendarURL({
+    summary: `${emoji} ${whoLabel(t.who)} UNAVAILABLE${t.reason?' — '+t.reason:''}`,
+    start: s, end: e,
+    description: `${whoLabel(t.who)} is unavailable during this time.\n\nReason: ${t.reason || '—'}\nNotes: ${t.notes || '—'}\nLogged by: ${t.createdBy || '—'}\n\nBefore saving: pick the "Luca" calendar from the dropdown at top.`
+  });
+  window.open(url, '_blank');
+  markTravelPushed(id);
+  logAction('travel', `Synced travel entry to Google Calendar — ${whoLabel(t.who)} ${t.start}`);
+  saveState(); renderTravel(); renderAudit();
+  toast('Synced. After saving in Google Calendar, this won\'t appear in future .ics exports.');
+}
+function markTravelUnpushed(id) {
+  const t = state.travel.find(t => t.id === id);
+  if (!t) return;
+  t.pushed = false; delete t.pushedAt;
+  saveState(); renderTravel();
+}
+function deleteTravel(id) {
+  if (!confirm('Remove this unavailability entry?')) return;
+  const t = state.travel.find(t => t.id === id);
+  state.travel = state.travel.filter(t => t.id !== id);
+  logAction('travel', `Deleted travel entry${t ? ' — ' + whoLabel(t.who) + ' ' + t.start : ''}`, { id });
+  saveState(); renderTravel(); renderSchedule(); renderDashboard(); renderAudit();
+}
+
+// ===== ROUTINES =====
+function renderRoutines() {
+  for (const slot of ['morning','afternoon','bedtime']) {
+    const el = document.getElementById('routine-' + slot);
+    const lines = (state.routines[slot] || '').split('\n').filter(l=>l.trim());
+    if (!lines.length) { el.innerHTML = '<div class="empty" style="padding: 20px 0">No steps yet.</div>'; continue; }
+    el.innerHTML = lines.map(line => {
+      const m = line.match(/^(\d{1,2}[:\d]*)\s+(.+)$/);
+      if (m) return `<div class="routine-slot"><div class="routine-time">${m[1]}</div><div class="routine-steps">${escapeHtml(m[2])}</div></div>`;
+      return `<div class="routine-slot"><div class="routine-time">—</div><div class="routine-steps">${escapeHtml(line)}</div></div>`;
+    }).join('');
+  }
+  document.getElementById('meal-notes').value = state.mealNotes || '';
+}
+let editingRoutineSlot = null;
+function editRoutine(slot) {
+  editingRoutineSlot = slot;
+  document.getElementById('routine-modal-title').textContent = 'Edit ' + slot + ' routine';
+  document.getElementById('routine-text').value = state.routines[slot] || '';
+  openModal('routine-modal');
+}
+function saveRoutine() {
+  if (!editingRoutineSlot) return;
+  state.routines[editingRoutineSlot] = document.getElementById('routine-text').value;
+  logAction('routines', `Updated ${editingRoutineSlot} routine`);
+  saveState(); closeModal('routine-modal'); renderRoutines(); renderAudit();
+  toast('Saved.');
+}
+function saveMealNotes() {
+  state.mealNotes = document.getElementById('meal-notes').value;
+  logAction('routines', 'Updated meal notes');
+  saveState(); renderAudit(); toast('Saved.');
+}
+
+// ===== MEDIA =====
+function renderMedia() {
+  for (const kind of ['approved','blocked']) {
+    const el = document.getElementById('media-'+kind);
+    if (!state.media[kind].length) { el.innerHTML = '<div class="empty" style="padding: 20px 0;">Nothing yet.</div>'; continue; }
+    el.innerHTML = state.media[kind].map((m, i) => `
+      <div class="list-item" style="padding: 8px 0;">
+        <div class="list-main"><div class="list-title">${escapeHtml(m.title)} ${m.tag?`<span class="media-tag">${escapeHtml(m.tag)}</span>`:''}</div></div>
+        <div class="list-actions"><button class="btn btn-sm btn-ghost" onclick="removeMedia('${kind}', ${i})">✕</button></div>
+      </div>`).join('');
+  }
+  document.getElementById('media-rules').value = state.media.rules || '';
+}
+function addMedia(kind) {
+  const input = document.getElementById('media-new-' + kind);
+  const v = input.value.trim();
+  if (!v) return;
+  state.media[kind].push({ title: v, tag: '' });
+  input.value = '';
+  logAction('media', `Added "${v}" to ${kind} list`);
+  saveState(); renderMedia(); renderAudit();
+}
+function removeMedia(kind, idx) {
+  const removed = state.media[kind][idx];
+  state.media[kind].splice(idx, 1);
+  logAction('media', `Removed "${removed?.title || ''}" from ${kind} list`);
+  saveState(); renderMedia(); renderAudit();
+}
+function saveMediaRules() {
+  state.media.rules = document.getElementById('media-rules').value;
+  logAction('media', 'Updated screen-time rules');
+  saveState(); renderAudit(); toast('Saved.');
+}
+
+// ===== INFO BANK =====
+function renderInfo() {
+  // contacts
+  const el = document.getElementById('contacts-list');
+  if (!state.contacts.length) el.innerHTML = '<div class="empty" style="padding: 20px 0;">No contacts yet.</div>';
+  else el.innerHTML = state.contacts.map((c,i)=>`
+    <div class="list-item" style="padding: 8px 0;">
+      <div class="list-main">
+        <div class="list-title">${escapeHtml(c.name)} <span class="media-tag">${escapeHtml(c.rel)}</span></div>
+        <div class="list-sub">${c.phone?`📞 <a href="tel:${c.phone}">${escapeHtml(c.phone)}</a>`:''}${c.notes?' · '+escapeHtml(c.notes):''}</div>
+      </div>
+      <div class="list-actions"><button class="btn btn-sm btn-ghost" onclick="removeContact(${i})">✕</button></div>
+    </div>`).join('');
+
+  // medical
+  document.getElementById('med-pediatrician').value = state.medical.pediatrician || '';
+  document.getElementById('med-ped-phone').value = state.medical.pedPhone || '';
+  document.getElementById('med-insurance').value = state.medical.insurance || '';
+  document.getElementById('med-allergies').value = state.medical.allergies || '';
+  document.getElementById('med-meds').value = state.medical.meds || '';
+  document.getElementById('med-notes').value = state.medical.notes || '';
+
+  // school
+  document.getElementById('sch-name').value = state.school.name || '';
+  document.getElementById('sch-teacher').value = state.school.teacher || '';
+  document.getElementById('sch-phone').value = state.school.phone || '';
+  document.getElementById('sch-portal').value = state.school.portal || '';
+  document.getElementById('sch-times').value = state.school.times || '';
+  document.getElementById('sch-pickups').value = state.school.pickups || '';
+
+  // packing
+  renderPacking();
+}
+function openContactModal() {
+  document.getElementById('ct-name').value = '';
+  document.getElementById('ct-rel').value = '';
+  document.getElementById('ct-phone').value = '';
+  document.getElementById('ct-notes').value = '';
+  openModal('contact-modal');
+}
+function saveContact() {
+  const c = {
+    name: document.getElementById('ct-name').value.trim(),
+    rel: document.getElementById('ct-rel').value.trim(),
+    phone: document.getElementById('ct-phone').value.trim(),
+    notes: document.getElementById('ct-notes').value.trim()
+  };
+  if (!c.name) return toast('Name required');
+  state.contacts.push(c);
+  logAction('info', `Added emergency contact — ${c.name}${c.rel?' ('+c.rel+')':''}`);
+  saveState(); closeModal('contact-modal'); renderInfo(); renderAudit();
+}
+function removeContact(i) {
+  if (!confirm('Remove?')) return;
+  const c = state.contacts[i];
+  state.contacts.splice(i,1);
+  logAction('info', `Removed emergency contact${c?' — '+c.name:''}`);
+  saveState(); renderInfo(); renderAudit();
+}
+
+function saveMedical() {
+  state.medical.pediatrician = document.getElementById('med-pediatrician').value;
+  state.medical.pedPhone = document.getElementById('med-ped-phone').value;
+  state.medical.insurance = document.getElementById('med-insurance').value;
+  state.medical.allergies = document.getElementById('med-allergies').value;
+  state.medical.meds = document.getElementById('med-meds').value;
+  state.medical.notes = document.getElementById('med-notes').value;
+  logAction('info', 'Updated medical info');
+  saveState(); renderAudit(); toast('Saved.');
+}
+function saveSchool() {
+  state.school.name = document.getElementById('sch-name').value;
+  state.school.teacher = document.getElementById('sch-teacher').value;
+  state.school.phone = document.getElementById('sch-phone').value;
+  state.school.portal = document.getElementById('sch-portal').value;
+  state.school.times = document.getElementById('sch-times').value;
+  state.school.pickups = document.getElementById('sch-pickups').value;
+  logAction('info', 'Updated school info');
+  saveState(); renderAudit(); toast('Saved.');
+}
+
+function renderPacking() {
+  const el = document.getElementById('packing-list');
+  if (!state.packing.length) { el.innerHTML = '<div class="empty" style="padding: 12px 0;">Empty.</div>'; return; }
+  el.innerHTML = state.packing.map((it, i) => `
+    <div class="list-item" style="padding: 6px 0;">
+      <div class="list-main">${escapeHtml(it)}</div>
+      <div class="list-actions"><button class="btn btn-sm btn-ghost" onclick="removePacking(${i})">✕</button></div>
+    </div>`).join('');
+}
+function addPackingItem() {
+  const inp = document.getElementById('packing-new');
+  const v = inp.value.trim(); if (!v) return;
+  state.packing.push(v); inp.value = '';
+  logAction('info', `Added packing item — ${v}`);
+  saveState(); renderPacking(); renderAudit();
+}
+function removePacking(i) {
+  const it = state.packing[i];
+  state.packing.splice(i,1);
+  logAction('info', `Removed packing item${it?' — '+it:''}`);
+  saveState(); renderPacking(); renderAudit();
+}
+
+// ===== DOCUMENTS =====
+function renderDocs() {
+  const el = document.getElementById('docs-list');
+  if (!state.documents.length) { el.innerHTML = '<div class="empty">No documents linked yet.</div>'; return; }
+  el.innerHTML = state.documents.map(d => `
+    <div class="list-item">
+      <div class="list-main">
+        <div class="list-title">${escapeHtml(d.title)} <span class="media-tag">${escapeHtml(d.category)}</span></div>
+        <div class="list-sub">${d.notes ? escapeHtml(d.notes) + ' · ' : ''}<a href="${escapeHtml(d.url)}" target="_blank">${escapeHtml(d.url)}</a></div>
+      </div>
+      <div class="list-actions">
+        <a class="btn btn-sm" href="${escapeHtml(d.url)}" target="_blank">Open ↗</a>
+        <button class="btn btn-sm btn-ghost" onclick="deleteDoc('${d.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+function openDocModal() {
+  document.getElementById('dc-title').value='';
+  document.getElementById('dc-url').value='';
+  document.getElementById('dc-notes').value='';
+  openModal('doc-modal');
+}
+function saveDoc() {
+  const d = {
+    id: 'd'+Date.now(),
+    title: document.getElementById('dc-title').value.trim(),
+    category: document.getElementById('dc-cat').value,
+    url: document.getElementById('dc-url').value.trim(),
+    notes: document.getElementById('dc-notes').value.trim()
+  };
+  if (!d.title || !d.url) return toast('Title and URL required.');
+  state.documents.push(d);
+  logAction('documents', `Added document — ${d.title} (${d.category})`);
+  saveState(); closeModal('doc-modal'); renderDocs(); renderAudit();
+}
+function deleteDoc(id) {
+  if (!confirm('Delete this link?')) return;
+  const d = state.documents.find(d => d.id === id);
+  state.documents = state.documents.filter(d => d.id !== id);
+  logAction('documents', `Deleted document${d?' — '+d.title:''}`);
+  saveState(); renderDocs(); renderAudit();
+}
+
+// ===== JOURNAL =====
+async function hashString(str) {
+  const buf = new TextEncoder().encode(str);
+  const h = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0, 16);
+}
+async function addJournalEntry() {
+  const text = document.getElementById('journal-input').value.trim();
+  if (!text) return;
+  const category = document.getElementById('journal-category').value;
+  const prev = state.journal.length ? state.journal[0].hash : '';
+  const ts = new Date().toISOString();
+  const author = actorLabel();
+  const payload = `${ts}|${author}|${category}|${text}|${prev}`;
+  const hash = await hashString(payload);
+  state.journal.unshift({ id: 'j'+Date.now(), ts, author, category, text, prevHash: prev, hash });
+  logAction('journal', `Added journal entry (${category})`);
+  saveState();
+  document.getElementById('journal-input').value = '';
+  renderJournal(); renderAudit(); toast('Entry locked & saved.');
+}
+function renderJournal() {
+  const el = document.getElementById('journal-list');
+  const filter = document.getElementById('journal-filter').value;
+  let items = state.journal;
+  if (filter !== 'all') items = items.filter(j => j.category === filter);
+  if (!items.length) { el.innerHTML = '<div class="empty">No entries.</div>'; return; }
+  el.innerHTML = items.map(j => `
+    <div class="journal-entry">
+      <div class="journal-meta">
+        <b>${new Date(j.ts).toLocaleString()}</b> · ${escapeHtml(j.category)} · ${escapeHtml(j.author)}
+        <span class="hash-pill" title="SHA-256 chain hash">🔒 ${j.hash}</span>
+      </div>
+      <div class="journal-text">${escapeHtml(j.text)}</div>
+    </div>`).join('');
+}
+function exportJournal() {
+  const lines = state.journal.map(j =>
+    `[${j.ts}] [${j.category}] (${j.author}) (hash:${j.hash})\n${j.text}\n`).reverse();
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  downloadBlob(blob, `luca-journal-${formatDateKey(todayLocal())}.txt`);
+}
+
+// ===== EXPENSES =====
+function openExpenseModal() {
+  document.getElementById('ex-desc').value = '';
+  document.getElementById('ex-amt').value = '';
+  document.getElementById('ex-date').value = formatDateKey(todayLocal());
+  document.getElementById('ex-cat').value = 'Other';
+  const paid = document.getElementById('ex-paid');
+  paid.innerHTML = `
+    <option value="dad">${state.settings.parentA.name} (Dad)</option>
+    <option value="mom">${state.settings.parentB.name} (Mom)</option>`;
+  document.getElementById('ex-split-dad').value = 50;
+  document.getElementById('ex-split-mom').value = 50;
+  document.getElementById('ex-receipt').value = '';
+  openModal('expense-modal');
+}
+function saveExpense() {
+  const e = {
+    id: 'e'+Date.now(),
+    desc: document.getElementById('ex-desc').value.trim(),
+    amount: parseFloat(document.getElementById('ex-amt').value) || 0,
+    date: document.getElementById('ex-date').value,
+    category: document.getElementById('ex-cat').value,
+    paidBy: document.getElementById('ex-paid').value,
+    splitDad: parseFloat(document.getElementById('ex-split-dad').value) || 50,
+    splitMom: parseFloat(document.getElementById('ex-split-mom').value) || 50,
+    receipt: document.getElementById('ex-receipt').value.trim(),
+    createdAt: new Date().toISOString(),
+    loggedBy: actorLabel()
+  };
+  if (!e.desc || !e.amount) return toast('Description & amount required.');
+  state.expenses.push(e);
+  logAction('expenses', `Added expense — ${e.desc} $${e.amount.toFixed(2)} (paid by ${whoLabel(e.paidBy)})`);
+  saveState(); closeModal('expense-modal'); renderExpenses(); renderAudit();
+}
+function renderExpenses() {
+  const sorted = state.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const now = new Date();
+  let monthTotal = 0, yearTotal = 0, dadOwes = 0, momOwes = 0;
+  for (const e of state.expenses) {
+    const d = parseDateKey(e.date);
+    if (d.getFullYear() === now.getFullYear()) yearTotal += e.amount;
+    if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) monthTotal += e.amount;
+    // Balance: dad's share - dad's paid
+    const dadShare = e.amount * (e.splitDad/100);
+    const momShare = e.amount * (e.splitMom/100);
+    if (e.paidBy === 'dad') momOwes += momShare;
+    else dadOwes += dadShare;
+  }
+  document.getElementById('exp-month').textContent = '$' + monthTotal.toFixed(2);
+  document.getElementById('exp-year').textContent = '$' + yearTotal.toFixed(2);
+  document.getElementById('exp-dad-owes').textContent = '$' + dadOwes.toFixed(2);
+  document.getElementById('exp-mom-owes').textContent = '$' + momOwes.toFixed(2);
+
+  const el = document.getElementById('expenses-list');
+  if (!sorted.length) { el.innerHTML = '<div class="empty">No expenses logged.</div>'; return; }
+  el.innerHTML = sorted.map(e => `
+    <div class="expense-row">
+      <div>
+        <div class="list-title">${escapeHtml(e.desc)} <span class="media-tag">${escapeHtml(e.category)}</span></div>
+        <div class="list-sub">${e.date} · Paid by ${whoLabel(e.paidBy)} · ${e.splitDad}/${e.splitMom} split${e.receipt?` · <a href="${escapeHtml(e.receipt)}" target="_blank">receipt</a>`:''}</div>
+      </div>
+      <div class="expense-amount">$${e.amount.toFixed(2)}</div>
+      <button class="btn btn-sm btn-ghost" onclick="deleteExpense('${e.id}')">✕</button>
+    </div>`).join('');
+}
+function deleteExpense(id) {
+  if (!confirm('Delete this expense?')) return;
+  const e = state.expenses.find(e => e.id === id);
+  state.expenses = state.expenses.filter(e => e.id !== id);
+  logAction('expenses', `Deleted expense${e?' — '+e.desc+' $'+e.amount.toFixed(2):''}`);
+  saveState(); renderExpenses(); renderAudit();
+}
+
+// ===== AUDIT LOG VIEW =====
+const AUDIT_ACTION_GROUPS = {
+  schedule: ['schedule'],
+  request: ['request'],
+  travel: ['travel'],
+  info: ['info'],
+  media: ['media'],
+  routines: ['routines'],
+  expenses: ['expenses'],
+  journal: ['journal'],
+  documents: ['documents'],
+  settings: ['settings'],
+  system: ['system']
+};
+function renderAudit() {
+  const el = document.getElementById('audit-list');
+  if (!el) return;
+  const aFilter = (document.getElementById('audit-filter-actor') || {}).value || 'all';
+  const xFilter = (document.getElementById('audit-filter-action') || {}).value || 'all';
+  let items = state.auditLog.slice();
+  if (aFilter !== 'all') items = items.filter(i => i.actorId === aFilter);
+  if (xFilter !== 'all') items = items.filter(i => (AUDIT_ACTION_GROUPS[xFilter] || []).includes(i.action));
+  if (!items.length) { el.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+  el.innerHTML = items.map(i => `
+    <div class="journal-entry" style="border-left-color: var(--c-dad);">
+      <div class="journal-meta">
+        <b>${new Date(i.ts).toLocaleString()}</b> · ${escapeHtml(i.actor)} · <span class="badge badge-school">${escapeHtml(i.action)}</span>
+      </div>
+      <div class="journal-text">${escapeHtml(i.summary)}</div>
+    </div>`).join('');
+}
+function exportAuditCSV() {
+  const header = 'timestamp,actor,action,summary\n';
+  const esc = s => '"' + String(s || '').replace(/"/g, '""') + '"';
+  const rows = state.auditLog.slice().reverse().map(i =>
+    [i.ts, i.actor, i.action, i.summary].map(esc).join(',')
+  ).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  downloadBlob(blob, `luca-activity-log-${formatDateKey(todayLocal())}.csv`);
+}
+function clearAuditLog() {
+  if (!confirm('Remove all activity log entries older than 90 days?')) return;
+  const cutoff = Date.now() - 90*24*60*60*1000;
+  const before = state.auditLog.length;
+  state.auditLog = state.auditLog.filter(i => new Date(i.ts).getTime() >= cutoff);
+  logAction('system', `Pruned ${before - state.auditLog.length} audit entries older than 90 days`);
+  saveState(); renderAudit();
+}
+
+// ===== SETTINGS =====
+function renderSettings() {
+  document.getElementById('set-current-user').value = state.settings.currentUser || 'dad';
+  document.getElementById('set-parentA-name').value = state.settings.parentA.name;
+  document.getElementById('set-parentA-email').value = state.settings.parentA.email;
+  document.getElementById('set-parentB-name').value = state.settings.parentB.name;
+  document.getElementById('set-parentB-email').value = state.settings.parentB.email;
+  document.getElementById('set-gp-name').value = state.settings.grandparents.name;
+  document.getElementById('set-gp-email').value = state.settings.grandparents.email;
+  document.getElementById('set-child-name').value = state.settings.childName;
+  document.getElementById('set-timezone').value = state.settings.timezone;
+  document.getElementById('set-autosync').checked = !!state.settings.autoSyncGoogle;
+  document.getElementById('set-gcal-id').value = state.settings.googleCalendarId || '';
+  document.getElementById('set-mail-mode').value = state.settings.mailMode || 'gmail';
+}
+function saveSettings() {
+  const prevUser = state.settings.currentUser;
+  state.settings.currentUser = document.getElementById('set-current-user').value;
+  state.settings.mailMode = document.getElementById('set-mail-mode').value;
+  state.settings.parentA.name = document.getElementById('set-parentA-name').value.trim() || 'Tyler';
+  state.settings.parentA.email = document.getElementById('set-parentA-email').value.trim();
+  state.settings.parentB.name = document.getElementById('set-parentB-name').value.trim() || 'Anali';
+  state.settings.parentB.email = document.getElementById('set-parentB-email').value.trim();
+  state.settings.grandparents.name = document.getElementById('set-gp-name').value.trim() || 'Grandparents';
+  state.settings.grandparents.email = document.getElementById('set-gp-email').value.trim();
+  state.settings.childName = document.getElementById('set-child-name').value.trim() || 'Luca';
+  state.settings.timezone = document.getElementById('set-timezone').value.trim() || 'America/Phoenix';
+  logAction('settings', `Updated parents/caregivers settings${prevUser !== state.settings.currentUser ? ' (active user: ' + state.settings.currentUser + ')' : ''}`);
+  saveState(); renderAll(); toast('Settings saved.');
+}
+function saveGCalSettings() {
+  state.settings.autoSyncGoogle = document.getElementById('set-autosync').checked;
+  state.settings.googleCalendarId = document.getElementById('set-gcal-id').value.trim();
+  logAction('settings', `Google Calendar auto-sync ${state.settings.autoSyncGoogle ? 'enabled' : 'disabled'}`);
+  saveState(); toast('Saved.');
+}
+function exportAll() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  downloadBlob(blob, `luca-hub-backup-${formatDateKey(todayLocal())}.json`);
+}
+function importAll(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const parsed = JSON.parse(r.result);
+      if (!confirm('This will REPLACE all current data. Continue?')) return;
+      state = mergeDeep(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed);
+      logAction('system', `Imported data from file (${f.name})`);
+      saveState(); renderAll(); toast('Data imported.');
+    } catch (e) { alert('Invalid file: ' + e.message); }
+  };
+  r.readAsText(f);
+}
+function resetAll() {
+  if (!confirm('Delete ALL data and reset to defaults? This cannot be undone.')) return;
+  if (!confirm('Really delete everything? Export a backup first if you want to keep it.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  logAction('system', 'Reset all data to defaults');
+  saveState(); renderAll(); toast('Reset complete.');
+}
+function exportAllLogged() {
+  logAction('system', 'Exported full backup');
+  saveState();
+  exportAll();
+}
+
+// ===== ICS EXPORT =====
+// Only emits UN-SYNCED DEVIATIONS: day overrides and travel/unavailability
+// that haven't already been pushed to Google Calendar. Standard recurring schedule
+// lives in Google Calendar — don't re-export. If an item was pushed to GCal via
+// the accept flow or per-item "Sync" button, it's marked pushed and skipped.
+function exportICS(includeAlreadySynced) {
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Luca Hub//EN','CALSCALE:GREGORIAN'];
+  let eventCount = 0;
+  let skippedCount = 0;
+  const pushedNow = [];
+
+  // 1. Day overrides (custom per-day schedules, including accepted change requests)
+  for (const key of Object.keys(state.overrides)) {
+    const override = state.overrides[key];
+    if (!override || !override.blocks || !override.blocks.length) continue;
+    if (!includeAlreadySynced && override.pushed) { skippedCount++; continue; }
+    const d = parseDateKey(key);
+    for (const b of override.blocks) {
+      const [sh,sm] = b.start.split(':').map(Number);
+      const [eh,em] = b.end.split(':').map(Number);
+      const s = new Date(d); s.setHours(sh, sm, 0, 0);
+      const e = new Date(d); e.setHours(eh, em, 0, 0);
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:' + 'luca-override-' + key + '-' + b.who + '-' + b.start.replace(':','') + '@lucahub');
+      lines.push('DTSTAMP:' + icsDate(new Date()));
+      lines.push('DTSTART:' + icsDate(s));
+      lines.push('DTEND:' + icsDate(e));
+      const emoji = b.who==='dad'?'🔵 ':b.who==='mom'?'🟢 ':'🟫 ';
+      lines.push('SUMMARY:' + emoji + state.settings.childName + ' — with ' + whoLabel(b.who) + ' (override)');
+      lines.push('DESCRIPTION:Schedule override from Luca\'s Hub. Replaces the standard recurring event for this day — if the recurring event still shows, delete that occurrence (Delete → This event only).');
+      lines.push('END:VEVENT');
+      eventCount++;
+    }
+    pushedNow.push({ type: 'override', key });
+  }
+
+  // 2. Travel / unavailability entries
+  for (const t of state.travel) {
+    if (!includeAlreadySynced && t.pushed) { skippedCount++; continue; }
+    const s = combineDateTime(t.start, t.startTime || '00:00');
+    const e = combineDateTime(t.end, t.endTime || '23:59');
+    const emoji = t.who === 'dad' ? '🔴 ' : '🟠 ';
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + 'luca-travel-' + t.id + '@lucahub');
+    lines.push('DTSTAMP:' + icsDate(new Date()));
+    lines.push('DTSTART:' + icsDate(s));
+    lines.push('DTEND:' + icsDate(e));
+    lines.push('SUMMARY:' + emoji + whoLabel(t.who) + ' UNAVAILABLE' + (t.reason ? ' — ' + t.reason : ''));
+    lines.push('DESCRIPTION:' + (t.notes || 'Logged via Luca\'s Hub').replace(/\n/g, '\\n'));
+    lines.push('END:VEVENT');
+    eventCount++;
+    pushedNow.push({ type: 'travel', id: t.id });
+  }
+
+  lines.push('END:VCALENDAR');
+
+  if (eventCount === 0) {
+    if (skippedCount > 0) {
+      toast(`Nothing new to export — all ${skippedCount} deviation${skippedCount===1?'':'s'} already synced to Google Calendar.`);
+    } else {
+      toast('Nothing to export — no overrides or travel entries yet.');
+    }
+    return;
+  }
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
+  downloadBlob(blob, `luca-deviations-${formatDateKey(todayLocal())}.ics`);
+
+  // Mark everything in this export as pushed (the user is about to import it)
+  if (confirm(`Exported ${eventCount} deviation${eventCount===1?'':'s'}${skippedCount?` (${skippedCount} already-synced item${skippedCount===1?'':'s'} skipped)`:''}.\n\nAfter you import this file into Google Calendar, click OK to mark these as synced so they won't appear in future exports.\n\nClick Cancel if you haven't imported it yet.`)) {
+    for (const p of pushedNow) {
+      if (p.type === 'override') markOverridePushed(p.key);
+      else if (p.type === 'travel') markTravelPushed(p.id);
+    }
+    logAction('system', `Marked ${pushedNow.length} item${pushedNow.length===1?'':'s'} as synced to Google Calendar (via .ics export)`);
+    saveState();
+    renderAll();
+    toast('Marked as synced.');
+  }
+}
+
+function exportICSAll() {
+  if (!confirm('This will re-export ALL deviations including ones already synced to Google Calendar. This can create duplicates. Continue?')) return;
+  exportICS(true);
+}
+function icsDate(d) {
+  const pad = n => String(n).padStart(2,'0');
+  return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00';
+}
+
+// ===== UTIL =====
+function escapeHtml(s) { return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 500);
+}
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function toast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  Object.assign(t.style, { position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+    background:'#0f172a', color:'#fff', padding:'10px 20px', borderRadius:'8px',
+    fontSize:'14px', zIndex:200, boxShadow:'0 10px 25px rgba(0,0,0,.2)' });
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2500);
+}
+
+// ===== VIEW ROUTING =====
+function setView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('active', a.dataset.view === v));
+  if (window.innerWidth <= 800) document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo(0, 0);
+}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+document.querySelectorAll('.nav a').forEach(a => a.addEventListener('click', () => setView(a.dataset.view)));
+
+function renderActiveUserPill() {
+  let pill = document.getElementById('active-user-pill');
+  if (!pill) {
+    pill = document.createElement('div');
+    pill.id = 'active-user-pill';
+    Object.assign(pill.style, {
+      position: 'fixed', top: '12px', right: '12px', zIndex: 30,
+      background: 'var(--card)', border: '1px solid var(--line)',
+      borderRadius: '999px', padding: '4px 12px 4px 6px',
+      fontSize: '12px', color: 'var(--ink-soft)', boxShadow: 'var(--shadow)',
+      display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer'
+    });
+    pill.onclick = () => setView('settings');
+    document.body.appendChild(pill);
+  }
+  const u = state.settings.currentUser || 'other';
+  const emoji = u === 'dad' ? '👨' : u === 'mom' ? '👩' : '👤';
+  const label = u === 'dad' ? state.settings.parentA.name :
+                u === 'mom' ? state.settings.parentB.name : 'Other';
+  pill.innerHTML = `<span style="font-size:14px;">${emoji}</span><span>Logged as ${escapeHtml(label)}</span>`;
+}
+
+function renderAll() {
+  renderActiveUserPill();
+  renderDashboard();
+  renderSchedule();
+  renderChanges();
+  renderTravel();
+  renderRoutines();
+  renderMedia();
+  renderInfo();
+  renderDocs();
+  renderJournal();
+  renderExpenses();
+  renderAudit();
+  renderSettings();
+}
+renderAll();
+</script>
+</body>
+</html>
