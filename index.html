@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Luca's Hub — Co-Parenting Dashboard</title>
 <meta name="robots" content="noindex, nofollow">
-<script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <style>
-/* --- Access gate (added for Netlify Identity) --- */
+/* --- Access gate (shared password) --- */
 .app { display: none; }
 body.lc-authed .app { display: flex; }
 #lc-gate {
@@ -26,12 +25,25 @@ body.lc-authed #lc-gate { display: none; }
 }
 #lc-gate h1 { font-size: 22px; margin: 0 0 8px; color: #0f172a; }
 #lc-gate p { color: #475569; font-size: 14px; margin: 0 0 20px; }
+#lc-gate input[type="password"] {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid #e2e8f0; border-radius: 8px;
+  font-size: 15px; font-family: inherit;
+  margin-bottom: 12px; box-sizing: border-box;
+}
+#lc-gate input[type="password"]:focus {
+  outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+}
 #lc-gate button {
   background: #6366f1; color: #fff; border: 0;
   padding: 10px 22px; border-radius: 8px;
   font-size: 14px; font-weight: 500; cursor: pointer;
+  width: 100%;
 }
 #lc-gate button:hover { background: #4f46e5; }
+#lc-gate-err {
+  color: #dc2626; font-size: 13px; min-height: 18px; margin: 8px 0 0;
+}
 #lc-logout {
   position: fixed; top: 10px; right: 14px; z-index: 200;
   background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
@@ -337,12 +349,16 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
 </head>
 <body>
 
-<!-- Access gate: hides the app until the user logs in with an allowed email -->
+<!-- Access gate: hides the app until the correct password is entered -->
 <div id="lc-gate" role="dialog" aria-modal="true" aria-labelledby="lc-gate-title">
   <div class="lc-box">
     <h1 id="lc-gate-title">🔒 Luca's Hub</h1>
-    <p id="lc-gate-msg">This site is private. Please sign in to continue.</p>
-    <button id="lc-gate-login" type="button">Sign in</button>
+    <p id="lc-gate-msg">This site is private. Enter the password to continue.</p>
+    <form id="lc-gate-form" autocomplete="off">
+      <input id="lc-gate-pw" type="password" autocomplete="current-password" placeholder="Password" autofocus required>
+      <button id="lc-gate-login" type="submit">Sign in</button>
+      <div id="lc-gate-err" role="alert"></div>
+    </form>
   </div>
 </div>
 <button id="lc-logout" type="button" title="Sign out">Log out</button>
@@ -2704,66 +2720,76 @@ function renderAll() {
 renderAll();
 </script>
 
-<!-- ===== Netlify Identity access gate ===== -->
+<!-- ===== Shared-password access gate =====
+     To change the password:
+       1. Pick a new one (e.g. "MyNewPassword!")
+       2. Generate its SHA-256 hash. In a terminal:
+              echo -n "MyNewPassword!" | shasum -a 256
+          (copy the long hex string it prints, drop the trailing "  -")
+       3. Paste that hex string as the value of PASSWORD_HASH below.
+       4. Commit + push. Netlify auto-deploys.
+     The hash below corresponds to the current password. Treat it like a password file
+     and rotate it any time someone leaves the loop.
+-->
 <script>
 (function () {
-  // Only these two emails can see the app. Add more here if you ever need to.
-  var ALLOW = ['patrick.dilalla@gmail.com', '88.anali@gmail.com'];
+  // SHA-256 hex of the current password. Replace to rotate.
+  var PASSWORD_HASH = '9a4b0a1261101c159a7ca001aa20e0d16a44681cfaf5dc2b1bd9da815f229a40';
+  var STORAGE_KEY   = 'lc-auth-v1';
 
-  function norm(e) { return (e || '').trim().toLowerCase(); }
-  function isAllowed(user) { return !!user && ALLOW.indexOf(norm(user.email)) !== -1; }
-
-  var msgEl = document.getElementById('lc-gate-msg');
-  var loginBtn = document.getElementById('lc-gate-login');
+  var form     = document.getElementById('lc-gate-form');
+  var pwField  = document.getElementById('lc-gate-pw');
+  var errEl    = document.getElementById('lc-gate-err');
   var logoutBtn = document.getElementById('lc-logout');
 
-  function grant()   { document.body.classList.add('lc-authed'); }
-  function revoke(msg) {
-    document.body.classList.remove('lc-authed');
-    if (msg && msgEl) msgEl.textContent = msg;
+  function grant()  { document.body.classList.add('lc-authed'); }
+  function revoke() { document.body.classList.remove('lc-authed'); }
+
+  // Hash a string with SHA-256 -> hex
+  async function sha256Hex(text) {
+    var buf = new TextEncoder().encode(text);
+    var hashBuf = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hashBuf))
+      .map(function (b) { return b.toString(16).padStart(2, '0'); })
+      .join('');
   }
 
-  if (!window.netlifyIdentity) {
-    revoke('Could not load the login widget. Check your connection and reload.');
-    return;
+  // If the saved token matches the current hash, we're already signed in.
+  // (When you rotate the password, the saved token no longer matches and
+  //  everyone is forced to sign in again. That's intentional.)
+  try {
+    if (localStorage.getItem(STORAGE_KEY) === PASSWORD_HASH) grant();
+  } catch (_) { /* localStorage unavailable, ignore */ }
+
+  if (form) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      errEl.textContent = '';
+      var entered = pwField.value || '';
+      try {
+        var hex = await sha256Hex(entered);
+        if (hex === PASSWORD_HASH) {
+          try { localStorage.setItem(STORAGE_KEY, PASSWORD_HASH); } catch (_) {}
+          pwField.value = '';
+          grant();
+        } else {
+          errEl.textContent = 'Wrong password.';
+          pwField.select();
+        }
+      } catch (err) {
+        errEl.textContent = 'Could not check the password (browser too old?).';
+        console.error(err);
+      }
+    });
   }
 
-  var ni = window.netlifyIdentity;
-
-  ni.on('init', function (user) {
-    if (isAllowed(user)) {
-      grant();
-    } else if (user) {
-      // Logged in but wrong email — sign them out and show a denial message.
-      ni.logout();
-      revoke('That email is not on the access list. Ask Tyler to invite you.');
-    } else {
-      revoke('This site is private. Please sign in to continue.');
-    }
-  });
-
-  ni.on('login', function (user) {
-    if (isAllowed(user)) {
-      grant();
-      ni.close();
-    } else {
-      ni.logout();
-      revoke('That email is not on the access list. Ask Tyler to invite you.');
-    }
-  });
-
-  ni.on('logout', function () {
-    revoke('You have been signed out. Sign in again to continue.');
-  });
-
-  ni.on('error', function (err) {
-    console.error('Identity error:', err);
-  });
-
-  if (loginBtn)  loginBtn.addEventListener('click',  function () { ni.open('login'); });
-  if (logoutBtn) logoutBtn.addEventListener('click', function () { ni.logout(); });
-
-  ni.init();
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function () {
+      try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+      revoke();
+      if (pwField) { pwField.value = ''; pwField.focus(); }
+    });
+  }
 })();
 </script>
 </body>

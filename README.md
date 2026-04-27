@@ -2,93 +2,95 @@
 
 Private co-parenting dashboard for Luca — parenting-time schedule, change requests, daily routines, approved media, documents, expenses, and communication log. Single-page web app; all data lives in the browser (localStorage).
 
-Access is restricted to:
+Access is locked behind a shared password. The current password is set; share it with Anali via a secure channel (text/Signal/in-person, not email). To rotate it later, see *Rotating the password* below.
 
-- `patrick.dilalla@gmail.com` (Tyler)
-- `88.anali@gmail.com` (Anali)
+Intended users:
+- Tyler (`patrick.dilalla@gmail.com`)
+- Anali (`88.anali@gmail.com`)
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `index.html` | The entire app in one file (HTML + CSS + JS). Netlify Identity gate is wired in. |
+| `index.html` | The entire app in one file (HTML + CSS + JS). Password gate is wired in. |
 | `netlify.toml` | Netlify build config + security headers (CSP, X-Frame-Options, noindex). |
 | `robots.txt` | Tells search engines to stay out. |
 | `.gitignore` | Keeps OS/editor/secret files out of git. |
-| `luca-hub.html` | Old copy of the app — safe to delete (`git rm luca-hub.html`). |
+
+## How the lock works
+
+Open the site → password prompt → enter the right password → the app unlocks. The browser remembers you (in `localStorage`) so you don't have to retype on every visit. Click **Log out** in the top-right to clear it.
+
+The password itself is **not** stored in the source code — only its SHA-256 hash. So if someone "view-source"s the page, they see a hash like `73a3199c…`, not the password.
+
+### Honest limits of a shared-password gate
+
+- **It's a shared secret, not per-user accounts.** If the password leaks, both you and Anali need to rotate it.
+- **It runs in the browser.** A determined technical visitor can read the page's HTML markup before signing in. That's still safe here because the actual Luca data (schedule, notes, expenses) lives in each browser's localStorage — there is no server database to read. No Luca-specific content leaks through the gate.
+- **Don't use a weak password.** SHA-256 is fast, so trivial passwords ("password", "luca123") could be cracked offline. Use at least 12 characters with a number or symbol mixed in.
 
 ## One-time setup
 
-### 1. Push this folder to GitHub
-
-From this folder (`Luca Calendar/`) in a terminal:
+### 1. Push to GitHub
 
 ```bash
-git init
-git remote add origin https://github.com/patrickdilalla-lab/luca-calendar.git
-# If you already cloned the repo, skip the two lines above.
-
-git rm -f luca-hub.html    # remove the duplicate copy, if present
-git add .
-git commit -m "Add Netlify Identity gate + security headers"
-git branch -M main
-git push -u origin main
+cd "/Users/dilallpa/Documents/Claude/Projects/Luca Calendar"
+git add -A
+git commit -m "Switch to shared-password gate"
+git push origin main
 ```
 
-If `git push` complains about non-fast-forward, pull first: `git pull --rebase origin main` then push again.
+### 2. Deploy to Netlify (free)
 
-### 2. Connect the repo to Netlify (free)
+If your site is already connected to Netlify (from before), it will auto-redeploy on push — done.
+
+If not yet connected:
 
 1. Go to <https://app.netlify.com/> → **Add new site** → **Import from Git** → **GitHub** → pick `patrickdilalla-lab/luca-calendar`.
-2. Build settings: **leave blank** (no build command, publish directory `.`). The `netlify.toml` in the repo already configures this.
+2. Build settings: leave blank. The `netlify.toml` in the repo configures everything.
 3. Click **Deploy**. You'll get a URL like `https://luca-calendar-xyz.netlify.app`.
+4. (Optional) Site configuration → **Change site name** → pick something memorable.
 
-### 3. Turn on Identity and lock it down
+That's it. No Identity setup needed.
 
-1. In the Netlify site dashboard → **Identity** → **Enable Identity**.
-2. **Registration preferences** → set to **Invite only**. Critical — this means nobody can sign up without an invite.
-3. (Optional but recommended) **External providers** → enable **Google** so you can sign in with your Gmail account with one click.
-4. **Emails** tab → customize the invite email subject/body if you want (not required).
-5. Go back to **Identity** → **Invite users** → send invites to:
-   - `patrick.dilalla@gmail.com`
-   - `88.anali@gmail.com`
+### 3. Test it
 
-Each person clicks the invite link, sets a password (or links their Google account), and from then on they log in at your Netlify URL.
+Open the Netlify URL → password prompt appears → type the password → app unlocks.
 
-### 4. Defense in depth
+## Rotating the password
 
-The app also checks the email address client-side in `index.html`:
+You'll want to change the password from the default before sharing the URL. Here's how:
 
-```js
-var ALLOW = ['patrick.dilalla@gmail.com', '88.anali@gmail.com'];
-```
+1. Pick a new password. Aim for 12+ characters.
 
-If someone's email is somehow accepted by Netlify but isn't in that list, they're immediately logged out. To add or remove someone later, edit that array in `index.html`, commit, and push — Netlify auto-deploys on push.
+2. In a Mac Terminal, generate the SHA-256 hash:
 
-## How access actually works
+   ```bash
+   echo -n "YourNewPassword" | shasum -a 256
+   ```
 
-1. Visitor hits the site → sees a lock screen with a **Sign in** button, nothing else.
-2. They click Sign in → Netlify Identity modal asks for email + password (or Google).
-3. Netlify checks the email against its invited-users list. Non-invited emails are rejected.
-4. The app's own script checks the email against the allowlist. Any mismatch → immediate logout.
-5. Only after both checks pass does the dashboard become visible.
+   You'll get something like `a1b2c3d4...  -`. Copy just the long hex string (drop the trailing `  -`).
 
-### Honest limits
+3. Open `index.html`, find this line near the bottom:
 
-- This is a **client-side gate**. Someone technical who views the raw HTML can see the page structure before logging in. That's OK here because **the actual data (schedule, notes, expenses) lives in each browser's localStorage** — there is no server-side database to read. No Luca-specific content leaks through the gate.
-- localStorage per browser means the two parents' data doesn't auto-sync. The app has an **Export / Backup** option in Settings — use that if you want to share state, or move to a small backend later (Supabase, Firebase) if you want automatic sync.
-- If you ever lose access to both Netlify Identity accounts, you can re-invite from the Netlify dashboard as the site owner.
+   ```js
+   var PASSWORD_HASH = '73a3199c459258a364166139a6658332c180d8e8a9461b3caf8cdbad19b8471f';
+   ```
+
+4. Replace the hex string between the quotes with the new hash.
+
+5. Commit and push:
+
+   ```bash
+   git commit -am "Rotate password"
+   git push origin main
+   ```
+
+6. Netlify auto-redeploys in ~30 seconds. Anyone who was signed in on the old password will be signed out automatically (because the saved token no longer matches the new hash). Share the new password with Anali via a secure channel — text, signal, in-person — not email.
 
 ## Local development
 
-Open `index.html` directly in a browser. The Identity widget will try to reach Netlify — it won't fully work locally without the site being deployed, so just test the gate after you deploy the first time.
-
-Alternatively, use the Netlify CLI:
-
-```bash
-npm install -g netlify-cli
-netlify dev
-```
+Open `index.html` directly in a browser — the password gate works offline since it doesn't need any third-party service.
 
 ## Feature list (all already implemented in `index.html`)
 
@@ -105,8 +107,6 @@ netlify dev
 - **Activity log** — audit trail of everything.
 - **Settings** — parents, Google Calendar ID, export deviations as `.ics`.
 
-## Changing the allowlist later
+## Sync caveat
 
-1. Edit `index.html`, find `var ALLOW = [...]`, add or remove emails.
-2. In Netlify → Identity → Users, invite the new person or delete the old one.
-3. `git commit -am "Update allowlist"` → `git push`. Netlify redeploys automatically.
+Because all data lives in each browser's localStorage, your edits and Anali's don't auto-merge. Use **Settings → Backup / Sync** to export and import state. If you outgrow that, switching to a tiny backend (Supabase free tier) gives real per-account sync — happy to wire that up later.
