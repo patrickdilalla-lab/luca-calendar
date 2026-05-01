@@ -461,9 +461,10 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
         <h1>Schedule</h1>
         <div class="page-sub">Weekly parenting time. Click any day to adjust just that occurrence.</div>
       </div>
-      <div style="display:flex; gap:8px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn" onclick="setWeekOffset(0)">Today</button>
-        <button class="btn" onclick="exportICS()" title="Exports only day overrides and travel entries — NOT the standard weekly schedule (which already lives in Google Calendar as recurring events).">Export deviations (.ics)</button>
+        <button class="btn btn-primary" onclick="exportFullScheduleICS()" title="Recommended. Exports the standard schedule as RRULE recurring events with EXDATE entries for every override day. Importing this once replaces your hand-made GCal events; future overrides automatically cancel the matching standard occurrence.">Export full schedule (.ics)</button>
+        <button class="btn" onclick="exportICS()" title="Legacy: exports only day overrides and travel entries as standalone events. Does NOT cancel the standard recurring event — you'd have to delete that occurrence manually in GCal.">Export deviations only (.ics)</button>
       </div>
     </div>
 
@@ -859,19 +860,37 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
     </div>
 
     <div class="card">
-      <h2>📤 Export deviations (.ics)</h2>
+      <h2>📤 Google Calendar export — two modes</h2>
       <p style="color: var(--ink-soft); font-size: 13px;">
-        The Schedule page has an <b>Export deviations (.ics)</b> button. It exports <b>only</b> day overrides and travel entries — <b>never</b> the standard weekly schedule, which already lives on Google Calendar as recurring events. This avoids duplicating what's already there.
+        There are two export buttons on the Schedule page. Pick the right one for what you're doing.
       </p>
-      <p style="color: var(--ink-soft); font-size: 13px;">To import the file into Google Calendar:</p>
-      <ol style="font-size: 14px; color: var(--ink-soft); padding-left: 20px;">
-        <li>Click the button below to open Google Calendar's import page</li>
-        <li>Choose <b>Luca</b> as the destination calendar</li>
-        <li>Select the .ics file you just downloaded</li>
+
+      <h3 style="margin-top: 14px; font-size: 15px;">1. Export full schedule (.ics) — RECOMMENDED</h3>
+      <p style="color: var(--ink-soft); font-size: 13px;">
+        Emits the standard weekly schedule as <b>recurring events</b> (RRULE) plus an <b>EXDATE</b> entry for every override day. The override events are exported alongside. This makes overrides actually <b>replace</b> the standard event on import — no manual cleanup needed.
+      </p>
+      <p style="color: var(--ink-soft); font-size: 13px;"><b>One-time migration steps:</b></p>
+      <ol style="font-size: 13px; color: var(--ink-soft); padding-left: 20px;">
+        <li><b>Delete</b> any existing hand-made recurring "Luca with Dad/Mom/Grandparents" events from your Google Calendar (Delete → "All events"). This avoids duplicates.</li>
+        <li>Click <b>Export full schedule (.ics)</b> on the Schedule page.</li>
+        <li>Open Google Calendar Import (button below) → choose <b>Luca</b> as destination → upload the file.</li>
+        <li>Done. From now on, when you save an override the standard event for that day can be auto-cancelled (see mode 2).</li>
       </ol>
-      <a class="btn btn-primary" href="https://calendar.google.com/calendar/u/0/r/settings/export" target="_blank">Open Google Calendar Import ↗</a>
+
+      <h3 style="margin-top: 14px; font-size: 15px;">2. Per-override sync — surgical updates</h3>
+      <p style="color: var(--ink-soft); font-size: 13px;">
+        After the one-time migration, when you click a day and save a new override, use the <b>"Export override + auto-cancel standard (.ics)"</b> button in the day modal. That file emits a <code>STATUS:CANCELLED</code> entry for the standard event on that specific day plus the new override event. Importing it removes just that one occurrence and adds the override — your other weeks are untouched.
+      </p>
+
+      <h3 style="margin-top: 14px; font-size: 15px;">3. Export deviations only — legacy</h3>
+      <p style="color: var(--ink-soft); font-size: 13px;">
+        The original <b>Export deviations (.ics)</b> button exports overrides + travel as standalone events without touching the standard schedule. Use only if you're not ready to migrate to mode 1 (you'll have to manually delete overlapping standard occurrences in GCal).
+      </p>
+
+      <a class="btn btn-primary" style="margin-top: 12px;" href="https://calendar.google.com/calendar/u/0/r/settings/export" target="_blank">Open Google Calendar Import ↗</a>
+
       <p style="color: var(--ink-soft); font-size: 12px; margin-top: 12px;">
-        <b>Tip:</b> after importing, if any override falls on a day where the standard recurring event still exists, delete/shorten just that occurrence in Google Calendar (tap the event on that day → Delete → "This event only").
+        <b>Risks &amp; assumptions:</b> Google Calendar's behavior on ICS re-import with matching UIDs is inconsistent. The <code>SEQUENCE</code> field is bumped on every export to encourage updates, but if GCal duplicates an event after a re-import, delete the older copy. Multi-day standard blocks (e.g., Dad Sun 18:00 → Wed 08:30) are split into one recurring event per weekday so EXDATE for one day doesn't accidentally cancel the others — your calendar will show 4 "Luca with Dad" entries per week instead of one long one. This is intentional for clean override semantics.
       </p>
       <p style="color: var(--ink-soft); font-size: 12px; margin-top: 8px;">
         <b>Stop .ics files from auto-opening in Apple Calendar:</b> right-click the downloaded file in Finder → Get Info → "Open with" → choose Google Chrome (or another browser) → click <b>Change All…</b>
@@ -1664,7 +1683,10 @@ function openDayModal(date) {
     <button class="btn btn-sm" style="margin-top: 8px;" onclick="addDayBlock()">＋ Add block</button>
     ${hasOverride ? `
       <div style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
-        ${!isPushed ? `<button class="btn btn-sm btn-primary" onclick="syncOverrideToGCal('${key}')">📅 Sync to Google Calendar</button>` : `<button class="btn btn-sm btn-ghost" onclick="markOverrideUnpushed('${key}')" title="Mark as not yet synced">↺ Mark unsynced</button>`}
+        ${!isPushed ? `
+          <button class="btn btn-sm btn-primary" onclick="exportOverrideCancellationICS('${key}')" title="Recommended. Exports a single .ics that BOTH cancels the standard event for this day AND adds the override. Requires you've already imported the full schedule once.">📥 Export override + auto-cancel standard (.ics)</button>
+          <button class="btn btn-sm btn-ghost" onclick="syncOverrideToGCal('${key}')" title="Legacy: opens GCal compose tabs for each block. You'll need to manually delete the standard recurring event occurrence on this day.">📅 Open GCal compose (manual cleanup)</button>
+        ` : `<button class="btn btn-sm btn-ghost" onclick="markOverrideUnpushed('${key}')" title="Mark as not yet synced">↺ Mark unsynced</button>`}
         <button class="btn btn-sm btn-ghost" onclick="clearDayOverride()">Revert to standard</button>
       </div>
     ` : ''}
@@ -2559,11 +2581,225 @@ function exportAllLogged() {
   exportAll();
 }
 
-// ===== ICS EXPORT =====
-// Only emits UN-SYNCED DEVIATIONS: day overrides and travel/unavailability
-// that haven't already been pushed to Google Calendar. Standard recurring schedule
-// lives in Google Calendar — don't re-export. If an item was pushed to GCal via
-// the accept flow or per-item "Sync" button, it's marked pushed and skipped.
+// ===== STANDARD TEMPLATE → ICS HELPERS =====
+// Anchor week: Sunday Dec 29, 2024 (well in the past so all RRULE occurrences are valid).
+const TEMPLATE_ANCHOR_SUNDAY = new Date(2024, 11, 29);
+const ICS_DOW = ['SU','MO','TU','WE','TH','FR','SA'];
+
+// Break multi-day template blocks into per-day chunks. This way an EXDATE for a single
+// override day only cancels that one day's piece — not the whole multi-day block.
+// Example: Dad Sun18:00 → Wed08:30 becomes 4 chunks: Sun 18:00-23:59, Mon all day,
+// Tue all day, Wed 00:00-08:30. Override on Tuesday only EXDATEs the Tuesday chunk.
+function expandTemplateToDayChunks() {
+  const out = [];
+  for (const b of state.template.blocks) {
+    const duration = (b.endDay - b.startDay + 7) % 7;
+    const sameDay = duration === 0 && b.startTime < b.endTime;
+    if (sameDay) {
+      out.push({ who: b.who, dow: b.startDay, startTime: b.startTime, endTime: b.endTime });
+      continue;
+    }
+    const totalDays = duration + 1;
+    for (let i = 0; i < totalDays; i++) {
+      const dow = (b.startDay + i) % 7;
+      let startTime, endTime;
+      if (i === 0) { startTime = b.startTime; endTime = '23:59'; }
+      else if (i === duration) { startTime = '00:00'; endTime = b.endTime; }
+      else { startTime = '00:00'; endTime = '23:59'; }
+      out.push({ who: b.who, dow, startTime, endTime });
+    }
+  }
+  return out;
+}
+// Stable UID — same across exports so GCal updates the existing recurring event.
+function chunkUID(c) {
+  return 'luca-std-' + c.who + '-' + c.dow + '-' + c.startTime.replace(':','') + '-' + c.endTime.replace(':','') + '@lucahub';
+}
+function chunkAnchorStart(c) {
+  const d = addDays(TEMPLATE_ANCHOR_SUNDAY, c.dow);
+  const [h,m] = c.startTime.split(':').map(Number);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+function chunkAnchorEnd(c) {
+  const d = addDays(TEMPLATE_ANCHOR_SUNDAY, c.dow);
+  const [h,m] = c.endTime.split(':').map(Number);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+// All EXDATE strings for a chunk — every override that lands on this dow.
+function exdatesForChunk(c) {
+  const list = [];
+  for (const key of Object.keys(state.overrides)) {
+    const o = state.overrides[key];
+    if (!o || !o.blocks || !o.blocks.length) continue;
+    const d = parseDateKey(key);
+    if (d.getDay() !== c.dow) continue;
+    const [h,m] = c.startTime.split(':').map(Number);
+    d.setHours(h, m, 0, 0);
+    list.push(icsDate(d));
+  }
+  return list;
+}
+
+// ===== FULL SCHEDULE EXPORT =====
+// Emits the complete picture: standard schedule as RRULE recurring events, with EXDATE
+// entries for every override day. Use this for the one-time migration (delete old hand-made
+// GCal recurring events first, then import this file). After that, per-override updates
+// can use exportOverrideCancellationICS for surgical pushes.
+function exportFullScheduleICS() {
+  if (!confirm('Export FULL schedule (standard recurring events + every override + travel)?\n\nIMPORTANT: Before importing this into Google Calendar, DELETE any existing hand-made recurring events for Luca\'s parenting time. Otherwise you\'ll have duplicates.\n\nContinue?')) return;
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Luca Hub//EN','METHOD:PUBLISH','CALSCALE:GREGORIAN'];
+  let count = 0;
+  state.exportSequence = (state.exportSequence || 0) + 1;
+  const seq = state.exportSequence;
+
+  // 1. Standard schedule — one RRULE event per per-day chunk.
+  const chunks = expandTemplateToDayChunks();
+  for (const c of chunks) {
+    const s = chunkAnchorStart(c);
+    const e = chunkAnchorEnd(c);
+    const ex = exdatesForChunk(c);
+    const emoji = c.who==='dad'?'🔵 ':c.who==='mom'?'🟢 ':'🟫 ';
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + chunkUID(c));
+    lines.push('DTSTAMP:' + icsDate(new Date()));
+    lines.push('SEQUENCE:' + seq);
+    lines.push('DTSTART:' + icsDate(s));
+    lines.push('DTEND:' + icsDate(e));
+    lines.push('RRULE:FREQ=WEEKLY;BYDAY=' + ICS_DOW[c.dow]);
+    if (ex.length) lines.push('EXDATE:' + ex.join(','));
+    lines.push('SUMMARY:' + emoji + state.settings.childName + ' — with ' + whoLabel(c.who));
+    lines.push('DESCRIPTION:Standard weekly schedule from Luca\'s Hub. Override days for this weekday are excluded via EXDATE and appear as separate (override) events.');
+    lines.push('END:VEVENT');
+    count++;
+  }
+
+  // 2. Override day VEVENTs.
+  for (const key of Object.keys(state.overrides)) {
+    const o = state.overrides[key];
+    if (!o || !o.blocks || !o.blocks.length) continue;
+    const d = parseDateKey(key);
+    for (const b of o.blocks) {
+      const [sh,sm] = b.start.split(':').map(Number);
+      const [eh,em] = b.end.split(':').map(Number);
+      const s = new Date(d); s.setHours(sh, sm, 0, 0);
+      const e = new Date(d); e.setHours(eh, em, 0, 0);
+      const emoji = b.who==='dad'?'🔵 ':b.who==='mom'?'🟢 ':'🟫 ';
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:luca-override-' + key + '-' + b.who + '-' + b.start.replace(':','') + '@lucahub');
+      lines.push('DTSTAMP:' + icsDate(new Date()));
+      lines.push('SEQUENCE:' + seq);
+      lines.push('DTSTART:' + icsDate(s));
+      lines.push('DTEND:' + icsDate(e));
+      lines.push('SUMMARY:' + emoji + state.settings.childName + ' — with ' + whoLabel(b.who) + ' (override)');
+      lines.push('DESCRIPTION:Override for ' + key + '. Replaces the standard recurring event for this day.');
+      lines.push('END:VEVENT');
+      count++;
+    }
+  }
+
+  // 3. Travel / unavailability.
+  for (const t of state.travel) {
+    const s = combineDateTime(t.start, t.startTime || '00:00');
+    const e = combineDateTime(t.end, t.endTime || '23:59');
+    const emoji = t.who === 'dad' ? '🔴 ' : '🟠 ';
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:luca-travel-' + t.id + '@lucahub');
+    lines.push('DTSTAMP:' + icsDate(new Date()));
+    lines.push('SEQUENCE:' + seq);
+    lines.push('DTSTART:' + icsDate(s));
+    lines.push('DTEND:' + icsDate(e));
+    lines.push('SUMMARY:' + emoji + whoLabel(t.who) + ' UNAVAILABLE' + (t.reason ? ' — ' + t.reason : ''));
+    lines.push('DESCRIPTION:' + (t.notes || 'Logged via Luca\'s Hub').replace(/\n/g, '\\n'));
+    lines.push('END:VEVENT');
+    count++;
+  }
+
+  lines.push('END:VCALENDAR');
+
+  if (count === 0) { toast('Nothing to export.'); return; }
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
+  downloadBlob(blob, 'luca-full-schedule-' + formatDateKey(todayLocal()) + '.ics');
+
+  // Mark every override and travel as synced — they're inside this export.
+  for (const key of Object.keys(state.overrides)) {
+    if (state.overrides[key] && state.overrides[key].blocks && state.overrides[key].blocks.length) {
+      markOverridePushed(key);
+    }
+  }
+  for (const t of state.travel) markTravelPushed(t.id);
+  logAction('system', 'Exported FULL schedule (' + count + ' events, seq=' + seq + ') — RRULE + EXDATE');
+  saveState();
+  renderAll();
+  toast('Exported ' + count + ' events. Import to GCal.');
+}
+
+// ===== PER-OVERRIDE CANCELLATION EXPORT =====
+// Surgical fix for a single override: emits STATUS:CANCELLED for the standard chunk(s)
+// covering this date, plus the new override VEVENTs. Requires the user to have already
+// imported the full schedule once (so the UIDs match). Importing this file makes GCal
+// remove just that one occurrence of the standard event and add the override.
+function exportOverrideCancellationICS(key) {
+  const override = state.overrides[key];
+  if (!override || !override.blocks || !override.blocks.length) { toast('No override on this day.'); return; }
+  const d = parseDateKey(key);
+  state.exportSequence = (state.exportSequence || 0) + 1;
+  const seq = state.exportSequence;
+
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Luca Hub//EN','METHOD:PUBLISH','CALSCALE:GREGORIAN'];
+
+  // 1. Cancel each standard chunk that covers this weekday.
+  const chunks = expandTemplateToDayChunks().filter(c => c.dow === d.getDay());
+  for (const c of chunks) {
+    const [sh,sm] = c.startTime.split(':').map(Number);
+    const occStart = new Date(d); occStart.setHours(sh, sm, 0, 0);
+    const [eh,em] = c.endTime.split(':').map(Number);
+    const occEnd = new Date(d); occEnd.setHours(eh, em, 0, 0);
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + chunkUID(c));
+    lines.push('DTSTAMP:' + icsDate(new Date()));
+    lines.push('SEQUENCE:' + seq);
+    lines.push('STATUS:CANCELLED');
+    lines.push('RECURRENCE-ID:' + icsDate(occStart));
+    lines.push('DTSTART:' + icsDate(occStart));
+    lines.push('DTEND:' + icsDate(occEnd));
+    lines.push('SUMMARY:CANCELLED — replaced by override');
+    lines.push('END:VEVENT');
+  }
+
+  // 2. New override VEVENTs.
+  for (const b of override.blocks) {
+    const [sh,sm] = b.start.split(':').map(Number);
+    const [eh,em] = b.end.split(':').map(Number);
+    const s = new Date(d); s.setHours(sh, sm, 0, 0);
+    const e = new Date(d); e.setHours(eh, em, 0, 0);
+    const emoji = b.who==='dad'?'🔵 ':b.who==='mom'?'🟢 ':'🟫 ';
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:luca-override-' + key + '-' + b.who + '-' + b.start.replace(':','') + '@lucahub');
+    lines.push('DTSTAMP:' + icsDate(new Date()));
+    lines.push('SEQUENCE:' + seq);
+    lines.push('DTSTART:' + icsDate(s));
+    lines.push('DTEND:' + icsDate(e));
+    lines.push('SUMMARY:' + emoji + state.settings.childName + ' — with ' + whoLabel(b.who) + ' (override)');
+    lines.push('DESCRIPTION:Override for ' + key + '. The standard event for this day is cancelled in the same import.');
+    lines.push('END:VEVENT');
+  }
+
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
+  downloadBlob(blob, 'luca-override-' + key + '.ics');
+  markOverridePushed(key);
+  logAction('schedule', 'Exported override + cancellation .ics for ' + key + ' (seq=' + seq + ')');
+  saveState();
+  renderAll();
+  toast('Override exported. Import to GCal — the standard event for this day is auto-cancelled.');
+}
+
+// ===== ICS EXPORT (deviations only — legacy) =====
+// Emits ONLY day overrides + travel as standalone events. Doesn't cancel the standard
+// recurring event — user must do that manually. Kept for users who haven't migrated to
+// the full-schedule model yet.
 function exportICS(includeAlreadySynced) {
   const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Luca Hub//EN','CALSCALE:GREGORIAN'];
   let eventCount = 0;
