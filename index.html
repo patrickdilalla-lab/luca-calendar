@@ -235,8 +235,22 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
 .day-block.mom { background: var(--c-mom-bg); color: var(--c-mom); }
 .day-block.gp { background: var(--c-gp-bg); color: var(--c-gp); }
 .day-block.activity { background: var(--c-school-bg); color: var(--c-school); margin-top: 4px; }
+.day-block.school { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; font-weight: 600; }
+.day-block.school-event { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 .day-block.unavail { background: var(--c-unavail-bg); color: var(--c-unavail); border: 1px dashed var(--c-unavail); }
 .day-block.override { background: var(--c-propose-bg); color: var(--c-propose); font-weight: 700; }
+
+/* Monthly stats grid */
+.month-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 900px) { .month-stats { grid-template-columns: 1fr; } }
+.month-stats .stat-sub { font-size: 12px; color: var(--ink-soft); margin-top: 6px; line-height: 1.4; }
+.month-stats .stat-proj { font-size: 13px; font-weight: 600; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); color: var(--ink-soft); }
+.month-stats .stat-proj b { color: var(--ink); }
+.bar-rail { height: 6px; background: var(--bg); border-radius: 999px; margin-top: 8px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; transition: width .25s; }
+.bar-fill.dad { background: var(--c-dad); }
+.bar-fill.mom { background: var(--c-mom); }
+.bar-fill.gp  { background: var(--c-gp); }
 
 .week-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
 .week-title { font-weight: 600; font-size: 16px; }
@@ -433,6 +447,12 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
       </div>
     </div>
 
+    <div class="card">
+      <h2 id="month-stats-title">This month — parenting time</h2>
+      <div class="page-sub" style="margin-bottom: 12px;">Days and parenting hours so far this month, with end-of-month projection based on the standard schedule. School hours (M–F 8:30am–3pm) are excluded.</div>
+      <div class="month-stats" id="month-stats"></div>
+    </div>
+
     <div class="grid grid-2">
       <div class="card">
         <h2>This week at a glance</h2>
@@ -442,6 +462,11 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
         <h2>Today's timeline</h2>
         <div id="dash-today"></div>
       </div>
+    </div>
+
+    <div class="card">
+      <h2>🏫 Upcoming school events</h2>
+      <div id="dash-school-events"></div>
     </div>
 
     <div class="card">
@@ -484,6 +509,8 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
         <span class="legend-item"><span class="legend-dot" style="background: var(--c-gp)"></span>Grandparents</span>
         <span class="legend-item"><span class="legend-dot" style="background: var(--c-unavail)"></span>Unavailable</span>
         <span class="legend-item"><span class="legend-dot" style="background: var(--c-school)"></span>Activity</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #4338ca"></span>School</span>
+        <span class="legend-item"><span class="legend-dot" style="background: #fde68a"></span>School event</span>
         <span class="legend-item"><span style="color: var(--c-mom); font-weight: bold;">✓</span>Override synced to GCal</span>
         <span class="legend-item"><span style="color: var(--c-propose); font-weight: bold;">●</span>Override not yet synced</span>
       </div>
@@ -502,6 +529,49 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
       <div class="page-sub" style="margin-bottom: 12px;">Activities that happen at the same time each week (e.g., Jiu Jitsu Tue &amp; Thu).</div>
       <div id="activities-list"></div>
       <button class="btn" onclick="openActivityModal()">＋ Add activity</button>
+    </div>
+
+    <div class="card">
+      <h2>🏫 School &amp; school events</h2>
+      <div class="page-sub" style="margin-bottom: 12px;">School hours are automatically excluded from each parent's time. Add field trips, conferences, breaks, or any one-time / recurring school event below.</div>
+
+      <h3 style="margin-top: 8px;">School hours</h3>
+      <div class="form-row" style="margin-bottom: 8px;">
+        <div><label>Start time</label><input id="sch-start" type="time"></div>
+        <div><label>End time</label><input id="sch-end" type="time"></div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>School days</label>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+            <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="sch-d0" style="width:auto"> Sun</label>
+            <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="sch-d1" style="width:auto"> Mon</label>
+            <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="sch-d2" style="width:auto"> Tue</label>
+            <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="sch-d3" style="width:auto"> Wed</label>
+            <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="sch-d4" style="width:auto"> Thu</label>
+            <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="sch-d5" style="width:auto"> Fri</label>
+            <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="sch-d6" style="width:auto"> Sat</label>
+          </div>
+        </div>
+        <div>
+          <label>School year (optional)</label>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input id="sch-year-start" type="date" style="width: 100%;">
+            <span style="color:var(--ink-soft); font-size:12px;">to</span>
+            <input id="sch-year-end" type="date" style="width: 100%;">
+          </div>
+        </div>
+      </div>
+      <label style="display:inline-flex; gap:6px; font-weight:normal; margin-top: 10px;">
+        <input type="checkbox" id="sch-enabled" style="width:auto;"> School block enabled
+      </label>
+      <div style="margin-top: 10px;">
+        <button class="btn btn-primary btn-sm" onclick="saveSchoolConfig()">Save school hours</button>
+      </div>
+
+      <h3 style="margin-top: 18px;">School events</h3>
+      <div id="school-events-list"></div>
+      <button class="btn" style="margin-top: 8px;" onclick="openSchoolEventModal()">＋ Add school event</button>
     </div>
   </section>
 
@@ -883,8 +953,29 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
         <button class="btn" id="gcal-direct-test-btn" onclick="gcalDirectTestSync()" style="display:none;">Test connection</button>
         <button class="btn" onclick="saveGCalDirectSettings()">Save settings</button>
       </div>
+      <div style="margin-top: 14px; padding: 12px; border: 1px dashed var(--line); border-radius: 8px; background: #fefce8;">
+        <h3 style="margin: 0 0 6px;">🚀 Sync everything to Google Calendar</h3>
+        <p style="color: var(--ink-soft); font-size: 13px; margin: 0 0 10px;">
+          One-click bootstrap: pushes the standard schedule, school block, school events, recurring activities, travel, and all future overrides into your Luca calendar. Idempotent — running it again updates existing events in place. Past dates are never touched. Use this once after connecting (or any time you want to force a re-sync).
+        </p>
+        <button class="btn btn-primary" onclick="gcalSyncAll()">🔄 Sync everything now</button>
+      </div>
+
+      <div style="margin-top: 14px; padding: 12px; border: 1px dashed var(--c-unavail); border-radius: 8px; background: #fef2f2;">
+        <h3 style="margin: 0 0 6px;">🧹 Seeing duplicates? Clean up old Luca events</h3>
+        <p style="color: var(--ink-soft); font-size: 13px; margin: 0 0 10px;">
+          Earlier app versions used different iCalUIDs (e.g., unsplit standard chunks before the school carve-out). When you re-sync, those old events stay in Google Calendar alongside the new ones, showing up as duplicates. Use this to find and delete every event whose UID starts with <code>luca-*</code>, then re-run "Sync everything now" to repopulate cleanly.
+        </p>
+        <p style="color: var(--c-unavail); font-size: 12px; font-weight: 600; margin: 0 0 10px;">
+          ⚠ Destructive: deletes ALL Luca events from your Google Calendar, including past dates. Preview first to see what'll be removed.
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" onclick="gcalPreviewLucaEvents()">🔍 Preview Luca events</button>
+          <button class="btn btn-danger" onclick="gcalWipeAllLucaEvents()">🗑 Delete all Luca events</button>
+        </div>
+      </div>
       <p style="color: var(--ink-soft); font-size: 12px; margin-top: 12px;">
-        <b>Risks &amp; assumptions:</b> The token is held in memory only — you'll be asked to reconnect after closing the tab. Cancellation works by matching iCalUIDs (<code>luca-std-*</code>) imported from the Full Schedule .ics. If you ever delete and recreate the standard events in GCal, re-import the Full Schedule first so UIDs match. Scope requested is <code>calendar.events</code> — read/write events only, no other data.
+        <b>Risks &amp; assumptions:</b> The OAuth token is held in memory only — you'll be asked to reconnect after closing the tab. With Direct Sync enabled, saves to the template, school, school events, activities, overrides, and travel all push to Google Calendar automatically (today + future only). Scope requested is <code>calendar.events</code> — read/write events only, no other data. Stable iCalUIDs (<code>luca-std-*</code>, <code>luca-school-*</code>, <code>luca-schoolevt-*</code>, <code>luca-activity-*</code>, <code>luca-travel-*</code>, <code>luca-override-*</code>) mean re-syncs update in place rather than duplicating.
       </p>
     </div>
 
@@ -1154,6 +1245,64 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
   </div>
 </div>
 
+<!-- School Event Modal -->
+<div class="modal-backdrop" id="school-event-modal">
+  <div class="modal">
+    <div class="modal-head"><h2 id="school-event-modal-title">School event</h2><button class="modal-close" onclick="closeModal('school-event-modal')">×</button></div>
+    <input type="hidden" id="se-id">
+    <label>Title</label><input id="se-title" placeholder="e.g., Parent–teacher conference">
+    <div class="form-row">
+      <div>
+        <label>Type</label>
+        <select id="se-type" onchange="toggleSchoolEventType()">
+          <option value="onetime">One-time</option>
+          <option value="recurring">Recurring</option>
+        </select>
+      </div>
+      <div>
+        <label>Category</label>
+        <select id="se-category">
+          <option value="event">Event</option>
+          <option value="meeting">Meeting / conference</option>
+          <option value="trip">Field trip</option>
+          <option value="break">Break / no school</option>
+          <option value="holiday">Holiday</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div><label>Start date</label><input id="se-start-date" type="date"></div>
+      <div><label>End date</label><input id="se-end-date" type="date"></div>
+    </div>
+    <label style="display:inline-flex; gap:6px; font-weight:normal; margin-top: 10px;">
+      <input type="checkbox" id="se-allday" style="width:auto;" onchange="toggleAllDay()"> All day
+    </label>
+    <div class="form-row" id="se-time-row">
+      <div><label>Start time</label><input id="se-start" type="time"></div>
+      <div><label>End time</label><input id="se-end" type="time"></div>
+    </div>
+    <div id="se-recurring-row" style="display:none;">
+      <label>Repeats on</label>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+        <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="se-d0" style="width:auto"> Sun</label>
+        <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="se-d1" style="width:auto"> Mon</label>
+        <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="se-d2" style="width:auto"> Tue</label>
+        <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="se-d3" style="width:auto"> Wed</label>
+        <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="se-d4" style="width:auto"> Thu</label>
+        <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="se-d5" style="width:auto"> Fri</label>
+        <label style="display:inline-flex; gap:4px; font-weight:normal; margin:0;"><input type="checkbox" id="se-d6" style="width:auto"> Sat</label>
+      </div>
+    </div>
+    <label>Location</label><input id="se-location" placeholder="Classroom, gym, address...">
+    <label>Notes</label><textarea id="se-notes" placeholder="Permission slip due, what to bring, etc."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="se-delete-btn" style="margin-right:auto; display:none;" onclick="deleteSchoolEventFromModal()">Delete</button>
+      <button class="btn" onclick="closeModal('school-event-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSchoolEvent()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- Routine Edit Modal -->
 <div class="modal-backdrop" id="routine-modal">
   <div class="modal">
@@ -1202,6 +1351,25 @@ const DEFAULT_STATE = {
   activities: [
     { id: 'jj', name: 'Jiu Jitsu', days: [2, 4], start: '16:30', end: '17:30', location: '' }
   ],
+  // School block: Luca is in school M-F 8:30am–3:00pm. This time is excluded
+  // from parent hour totals. Schedule respects these hours (no overlap).
+  schoolConfig: {
+    enabled: true,
+    days: [1, 2, 3, 4, 5],   // Mon–Fri
+    start: '08:30',
+    end:   '15:00',
+    name:  'School',
+    // start/end of the school year (inclusive). Outside this range the school
+    // block does NOT apply (summer/break). Leave start blank for "always".
+    yearStart: '',
+    yearEnd:   ''
+  },
+  // School events: parent-meetings, field trips, breaks, etc.
+  // Each: { id, title, type ('onetime'|'recurring'), startDate, endDate,
+  //         start (HH:MM, optional for all-day), end (HH:MM, optional),
+  //         days (array of 0-6 for recurring), allDay (bool), location, notes,
+  //         category ('event'|'break'|'meeting'|'trip'|'holiday') }
+  schoolEvents: [],
   overrides: {},    // key: 'YYYY-MM-DD', value: { blocks: [...] }
   travel: [],       // [{id, who, start, end, reason, notes, createdAt}]
   changes: [],      // [{id, byEmail, toEmail, origDate, origWho, newDate, newWho, reason, makeup, status, created, replyNotes}]
@@ -1484,8 +1652,59 @@ async function gcalDeleteEvent(eventId) {
   return gcalApi('DELETE', gcalCalendarPath() + '/events/' + encodeURIComponent(eventId));
 }
 
+// Create-or-update by iCalUID. Pass the full event object including `iCalUID`.
+// If an event with that UID exists, PATCH it. Otherwise POST a new one.
+// Returns { action: 'created'|'updated'|'skipped', id, error? }.
+async function gcalUpsertEventByUID(event) {
+  if (!event.iCalUID) throw new Error('gcalUpsertEventByUID requires iCalUID');
+  try {
+    const existing = await gcalFindEventByUID(event.iCalUID);
+    if (existing && existing.id) {
+      const patch = Object.assign({}, event);
+      delete patch.iCalUID; // can't change UID via PATCH
+      const updated = await gcalPatchEvent(existing.id, patch);
+      return { action: 'updated', id: (updated && updated.id) || existing.id };
+    }
+    const created = await gcalCreateEvent(event);
+    return { action: 'created', id: created && created.id };
+  } catch (e) {
+    return { action: 'error', error: (e && e.message) || String(e) };
+  }
+}
+// Delete by iCalUID. No-op if not found.
+async function gcalDeleteByUID(iCalUID) {
+  try {
+    const ev = await gcalFindEventByUID(iCalUID);
+    if (!ev || !ev.id) return { action: 'not-found' };
+    await gcalDeleteEvent(ev.id);
+    return { action: 'deleted', id: ev.id };
+  } catch (e) {
+    return { action: 'error', error: (e && e.message) || String(e) };
+  }
+}
+// Local-time RFC5545 DATE (YYYYMMDD) for all-day events.
+function gcalLocalDate(dateKey) {
+  return dateKey.replace(/-/g, '');
+}
+// Build a Google Calendar RRULE string for weekly events.
+function gcalBuildRRule(dow, untilKey) {
+  let r = 'RRULE:FREQ=WEEKLY;BYDAY=' + ICS_DOW[dow];
+  if (untilKey) r += ';UNTIL=' + untilKey.replace(/-/g, '') + 'T000000Z';
+  return r;
+}
+function gcalAhead(check) {
+  if (!gcalIsConnected()) return false;
+  if (!state.settings.gcalDirect || !state.settings.gcalDirect.enabled) return false;
+  if (!state.settings.gcalDirect.autoSyncOnSave) return false;
+  return true;
+}
+
 // Main sync: cancel all standard chunks that fall on this date's DOW, then create override events.
 async function gcalSyncOverride(dateKey) {
+  if (dateKey < formatDateKey(todayLocal())) {
+    toast('Past date — Google Calendar changes are blocked for dates before today.');
+    return false;
+  }
   if (!gcalIsConnected()) {
     // try silent refresh
     try { await gcalEnsureToken(); } catch(e) {
@@ -1606,6 +1825,455 @@ async function gcalUnsyncOverride(dateKey) {
   return gcalUnsyncOverrideInternal(dateKey, false);
 }
 
+// ===== DIRECT SYNC: STANDARD TEMPLATE =====
+// Pushes one recurring event per per-day chunk, anchored to first occurrence on/after today.
+// On re-sync, the previous set of chunk UIDs is read from state.gcalDirectIndex.templateChunks;
+// any UIDs no longer in the new chunk list are deleted.
+async function gcalSyncTemplate() {
+  if (!gcalIsConnected()) { try { await gcalEnsureToken(); } catch(e){ toast('Connect Google Calendar first.'); return false; } }
+  const tz = state.settings.timezone || 'America/Phoenix';
+  const today = todayLocal();
+  const chunks = expandTemplateToDayChunks();
+  const newUIDs = new Set(chunks.map(chunkUID));
+  state.gcalDirectIndex = state.gcalDirectIndex || {};
+  const prevUIDs = state.gcalDirectIndex.templateChunks || [];
+
+  const results = { created: 0, updated: 0, deleted: 0, errors: [] };
+
+  // 1. Delete chunks that no longer exist in the new template.
+  for (const uid of prevUIDs) {
+    if (newUIDs.has(uid)) continue;
+    const r = await gcalDeleteByUID(uid);
+    if (r.action === 'deleted') results.deleted++;
+    else if (r.action === 'error') results.errors.push('delete ' + uid + ': ' + r.error);
+  }
+
+  // 2. Upsert current chunks.
+  for (const c of chunks) {
+    const firstDate = firstOccurrenceOnOrAfter(today, c.dow);
+    const startLocal = combineDateTime(formatDateKey(firstDate), c.startTime);
+    const endLocal = combineDateTime(formatDateKey(firstDate), c.endTime);
+    const emoji = c.who==='dad'?'🔵 ':c.who==='mom'?'🟢 ':'🟫 ';
+    const ev = {
+      iCalUID: chunkUID(c),
+      summary: emoji + state.settings.childName + ' — with ' + whoLabel(c.who),
+      description: 'Standard weekly schedule from Luca\'s Hub. School hours carved out. Overrides cancel the matching instance.',
+      start: { dateTime: gcalISOLocal(startLocal), timeZone: tz },
+      end:   { dateTime: gcalISOLocal(endLocal), timeZone: tz },
+      recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=' + ICS_DOW[c.dow]]
+    };
+    const r = await gcalUpsertEventByUID(ev);
+    if (r.action === 'created') results.created++;
+    else if (r.action === 'updated') results.updated++;
+    else if (r.action === 'error') results.errors.push('upsert ' + chunkUID(c) + ': ' + r.error);
+  }
+
+  state.gcalDirectIndex.templateChunks = Array.from(newUIDs);
+  saveState();
+  const msg = `Template synced: ${results.created} created, ${results.updated} updated, ${results.deleted} removed` + (results.errors.length ? ` (${results.errors.length} warning${results.errors.length===1?'':'s'})` : '');
+  logAction('schedule', msg, results.errors.length ? { errors: results.errors } : null);
+  toast(msg);
+  if (results.errors.length) console.warn('Template sync warnings', results.errors);
+  return true;
+}
+
+// ===== DIRECT SYNC: SCHOOL BLOCK =====
+// One recurring event per school weekday. UNTIL = schoolConfig.yearEnd if set.
+async function gcalSyncSchoolBlock() {
+  if (!gcalIsConnected()) { try { await gcalEnsureToken(); } catch(e){ toast('Connect Google Calendar first.'); return false; } }
+  const cfg = state.schoolConfig || {};
+  const tz = state.settings.timezone || 'America/Phoenix';
+  const today = todayLocal();
+  state.gcalDirectIndex = state.gcalDirectIndex || {};
+  const prevUIDs = state.gcalDirectIndex.schoolChunks || [];
+
+  const results = { created: 0, updated: 0, deleted: 0, errors: [] };
+  const chunks = cfg.enabled ? expandSchoolToDayChunks() : [];
+  const newUIDs = new Set(chunks.map(schoolChunkUID));
+
+  // 1. Delete removed school chunks (or all of them if school disabled).
+  for (const uid of prevUIDs) {
+    if (newUIDs.has(uid)) continue;
+    const r = await gcalDeleteByUID(uid);
+    if (r.action === 'deleted') results.deleted++;
+    else if (r.action === 'error') results.errors.push('delete ' + uid + ': ' + r.error);
+  }
+
+  // 2. Upsert current school chunks.
+  for (const c of chunks) {
+    const firstDate = firstOccurrenceOnOrAfter(today, c.dow);
+    const startLocal = combineDateTime(formatDateKey(firstDate), c.startTime);
+    const endLocal = combineDateTime(formatDateKey(firstDate), c.endTime);
+    const ev = {
+      iCalUID: schoolChunkUID(c),
+      summary: '🏫 ' + (c.name || 'School'),
+      description: 'School hours from Luca\'s Hub. Excluded from each parent\'s time totals.',
+      start: { dateTime: gcalISOLocal(startLocal), timeZone: tz },
+      end:   { dateTime: gcalISOLocal(endLocal), timeZone: tz },
+      recurrence: [gcalBuildRRule(c.dow, cfg.yearEnd)]
+    };
+    const r = await gcalUpsertEventByUID(ev);
+    if (r.action === 'created') results.created++;
+    else if (r.action === 'updated') results.updated++;
+    else if (r.action === 'error') results.errors.push('upsert ' + schoolChunkUID(c) + ': ' + r.error);
+  }
+
+  state.gcalDirectIndex.schoolChunks = Array.from(newUIDs);
+  saveState();
+  const msg = `School synced: ${results.created} created, ${results.updated} updated, ${results.deleted} removed` + (results.errors.length ? ` (${results.errors.length} warning${results.errors.length===1?'':'s'})` : '');
+  logAction('schedule', msg, results.errors.length ? { errors: results.errors } : null);
+  toast(msg);
+  return true;
+}
+
+// ===== DIRECT SYNC: SCHOOL EVENTS =====
+// Upserts a single school event. Recurring events use one VEVENT per weekday (matching the .ics shape).
+async function gcalSyncSchoolEvent(ev) {
+  if (!gcalIsConnected()) { try { await gcalEnsureToken(); } catch(e){ return false; } }
+  if (!ev || !ev.startDate) return false;
+  const todayKey = formatDateKey(todayLocal());
+  const evEnd = ev.endDate || ev.startDate;
+  if (evEnd < todayKey) {
+    // Entirely past — delete any existing pushed records and bail.
+    await gcalDeleteSchoolEvent(ev);
+    return true;
+  }
+  const tz = state.settings.timezone || 'America/Phoenix';
+  const icon = (typeof schoolEventIcon === 'function') ? schoolEventIcon(ev) : '🏫';
+  const summary = icon + ' ' + ev.title;
+
+  state.gcalDirectIndex = state.gcalDirectIndex || {};
+  state.gcalDirectIndex.schoolEventUIDs = state.gcalDirectIndex.schoolEventUIDs || {};
+  const prevUIDs = state.gcalDirectIndex.schoolEventUIDs[ev.id] || [];
+
+  const results = { created: 0, updated: 0, deleted: 0, errors: [] };
+  const newUIDs = [];
+
+  if (ev.type === 'recurring' && Array.isArray(ev.days) && ev.days.length) {
+    const effectiveStartKey = ev.startDate < todayKey ? todayKey : ev.startDate;
+    const start = parseDateKey(effectiveStartKey);
+    for (const dow of ev.days) {
+      const uid = 'luca-schoolevt-' + ev.id + '-' + dow + '@lucahub';
+      newUIDs.push(uid);
+      let anchor = new Date(start);
+      const diff = (dow - anchor.getDay() + 7) % 7;
+      anchor = addDays(anchor, diff);
+      let payload;
+      if (ev.allDay) {
+        payload = {
+          iCalUID: uid, summary,
+          start: { date: formatDateKey(anchor) },
+          end:   { date: formatDateKey(addDays(anchor, 1)) },
+          recurrence: [gcalBuildRRule(dow, ev.endDate)],
+          location: ev.location || undefined,
+          description: ev.notes || undefined
+        };
+      } else {
+        const [sh, sm] = (ev.start || '09:00').split(':').map(Number);
+        const [eh, em] = (ev.end || ev.start || '10:00').split(':').map(Number);
+        const sd = new Date(anchor); sd.setHours(sh, sm, 0, 0);
+        const ed = new Date(anchor); ed.setHours(eh, em, 0, 0);
+        payload = {
+          iCalUID: uid, summary,
+          start: { dateTime: gcalISOLocal(sd), timeZone: tz },
+          end:   { dateTime: gcalISOLocal(ed), timeZone: tz },
+          recurrence: [gcalBuildRRule(dow, ev.endDate)],
+          location: ev.location || undefined,
+          description: ev.notes || undefined
+        };
+      }
+      const r = await gcalUpsertEventByUID(payload);
+      if (r.action === 'created') results.created++;
+      else if (r.action === 'updated') results.updated++;
+      else if (r.action === 'error') results.errors.push(uid + ': ' + r.error);
+    }
+  } else {
+    const uid = 'luca-schoolevt-' + ev.id + '@lucahub';
+    newUIDs.push(uid);
+    const endKey = ev.endDate || ev.startDate;
+    const effectiveStartKey = ev.startDate < todayKey ? todayKey : ev.startDate;
+    let payload;
+    if (ev.allDay) {
+      payload = {
+        iCalUID: uid, summary,
+        start: { date: effectiveStartKey },
+        end:   { date: formatDateKey(addDays(parseDateKey(endKey), 1)) },
+        location: ev.location || undefined,
+        description: ev.notes || undefined
+      };
+    } else {
+      const sd = combineDateTime(effectiveStartKey, ev.start || '09:00');
+      const ed = combineDateTime(endKey, ev.end || ev.start || '10:00');
+      payload = {
+        iCalUID: uid, summary,
+        start: { dateTime: gcalISOLocal(sd), timeZone: tz },
+        end:   { dateTime: gcalISOLocal(ed), timeZone: tz },
+        location: ev.location || undefined,
+        description: ev.notes || undefined
+      };
+    }
+    const r = await gcalUpsertEventByUID(payload);
+    if (r.action === 'created') results.created++;
+    else if (r.action === 'updated') results.updated++;
+    else if (r.action === 'error') results.errors.push(uid + ': ' + r.error);
+  }
+
+  // Delete UIDs that existed before but no longer (e.g., type changed onetime→recurring).
+  for (const uid of prevUIDs) {
+    if (newUIDs.includes(uid)) continue;
+    const r = await gcalDeleteByUID(uid);
+    if (r.action === 'deleted') results.deleted++;
+    else if (r.action === 'error') results.errors.push('delete ' + uid + ': ' + r.error);
+  }
+  state.gcalDirectIndex.schoolEventUIDs[ev.id] = newUIDs;
+  saveState();
+  if (results.errors.length) console.warn('School event sync warnings', results.errors);
+  return true;
+}
+async function gcalDeleteSchoolEvent(ev) {
+  if (!gcalIsConnected()) { try { await gcalEnsureToken(); } catch(e){ return false; } }
+  state.gcalDirectIndex = state.gcalDirectIndex || {};
+  state.gcalDirectIndex.schoolEventUIDs = state.gcalDirectIndex.schoolEventUIDs || {};
+  const uids = state.gcalDirectIndex.schoolEventUIDs[ev.id] || ['luca-schoolevt-' + ev.id + '@lucahub'];
+  for (const uid of uids) {
+    try { await gcalDeleteByUID(uid); } catch(e) { console.warn(e); }
+  }
+  delete state.gcalDirectIndex.schoolEventUIDs[ev.id];
+  saveState();
+  return true;
+}
+
+// ===== DIRECT SYNC: TRAVEL =====
+async function gcalSyncTravel(t) {
+  if (!gcalIsConnected()) { try { await gcalEnsureToken(); } catch(e){ return false; } }
+  if (!t) return false;
+  const todayKey = formatDateKey(todayLocal());
+  if ((t.end || t.start) < todayKey) {
+    await gcalDeleteByUID('luca-travel-' + t.id + '@lucahub');
+    return true;
+  }
+  const tz = state.settings.timezone || 'America/Phoenix';
+  const startKey = t.start < todayKey ? todayKey : t.start;
+  const s = combineDateTime(startKey, t.startTime || '00:00');
+  const e = combineDateTime(t.end, t.endTime || '23:59');
+  const emoji = t.who === 'dad' ? '🔴 ' : '🟠 ';
+  const payload = {
+    iCalUID: 'luca-travel-' + t.id + '@lucahub',
+    summary: emoji + whoLabel(t.who) + ' UNAVAILABLE' + (t.reason ? ' — ' + t.reason : ''),
+    description: (t.notes || 'Logged via Luca\'s Hub') + '\n\nThis flag does NOT auto-reassign parenting time. Use Schedule Change Request if needed.',
+    start: { dateTime: gcalISOLocal(s), timeZone: tz },
+    end:   { dateTime: gcalISOLocal(e), timeZone: tz }
+  };
+  const r = await gcalUpsertEventByUID(payload);
+  if (r.action !== 'error') {
+    t.pushed = true;
+    t.pushedAt = new Date().toISOString();
+    saveState();
+  }
+  return r.action !== 'error';
+}
+async function gcalDeleteTravel(t) {
+  if (!t) return false;
+  if (!gcalIsConnected()) { try { await gcalEnsureToken(); } catch(e){ return false; } }
+  await gcalDeleteByUID('luca-travel-' + t.id + '@lucahub');
+  return true;
+}
+
+// ===== DIRECT SYNC: RECURRING ACTIVITIES =====
+async function gcalSyncActivity(a) {
+  if (!gcalIsConnected()) { try { await gcalEnsureToken(); } catch(e){ return false; } }
+  if (!a || !a.days || !a.days.length) return false;
+  const tz = state.settings.timezone || 'America/Phoenix';
+  const today = todayLocal();
+  state.gcalDirectIndex = state.gcalDirectIndex || {};
+  state.gcalDirectIndex.activityUIDs = state.gcalDirectIndex.activityUIDs || {};
+  const prevUIDs = state.gcalDirectIndex.activityUIDs[a.id] || [];
+  const newUIDs = [];
+  const errors = [];
+  for (const dow of a.days) {
+    const uid = 'luca-activity-' + a.id + '-' + dow + '@lucahub';
+    newUIDs.push(uid);
+    const firstDate = firstOccurrenceOnOrAfter(today, dow);
+    const sd = combineDateTime(formatDateKey(firstDate), a.start);
+    const ed = combineDateTime(formatDateKey(firstDate), a.end);
+    const payload = {
+      iCalUID: uid,
+      summary: '🎯 ' + a.name,
+      start: { dateTime: gcalISOLocal(sd), timeZone: tz },
+      end:   { dateTime: gcalISOLocal(ed), timeZone: tz },
+      recurrence: ['RRULE:FREQ=WEEKLY;BYDAY=' + ICS_DOW[dow]],
+      location: a.location || undefined
+    };
+    const r = await gcalUpsertEventByUID(payload);
+    if (r.action === 'error') errors.push(uid + ': ' + r.error);
+  }
+  for (const uid of prevUIDs) {
+    if (newUIDs.includes(uid)) continue;
+    await gcalDeleteByUID(uid);
+  }
+  state.gcalDirectIndex.activityUIDs[a.id] = newUIDs;
+  saveState();
+  if (errors.length) console.warn('Activity sync warnings', errors);
+  return true;
+}
+async function gcalDeleteActivity(a) {
+  if (!gcalIsConnected()) { try { await gcalEnsureToken(); } catch(e){ return false; } }
+  state.gcalDirectIndex = state.gcalDirectIndex || {};
+  state.gcalDirectIndex.activityUIDs = state.gcalDirectIndex.activityUIDs || {};
+  const uids = state.gcalDirectIndex.activityUIDs[a.id] || [];
+  for (const uid of uids) await gcalDeleteByUID(uid);
+  delete state.gcalDirectIndex.activityUIDs[a.id];
+  saveState();
+  return true;
+}
+
+// ===== LIST + WIPE OLD LUCA EVENTS =====
+// Finds every event in the calendar whose iCalUID starts with one of our known
+// Luca prefixes — handles both current UIDs and historical un-split chunk UIDs
+// from earlier app versions. Walks pagination.
+async function gcalListAllLucaEvents() {
+  const prefixes = ['luca-std-', 'luca-school-', 'luca-schoolevt-', 'luca-activity-', 'luca-travel-', 'luca-override-'];
+  let pageToken;
+  const out = [];
+  let pages = 0;
+  do {
+    let path = gcalCalendarPath() + '/events?singleEvents=false&showDeleted=false&maxResults=250';
+    if (pageToken) path += '&pageToken=' + encodeURIComponent(pageToken);
+    const r = await gcalApi('GET', path);
+    for (const it of (r && r.items) || []) {
+      const uid = it.iCalUID || '';
+      if (prefixes.some(p => uid.startsWith(p))) {
+        out.push({ id: it.id, iCalUID: uid, summary: it.summary || '(no title)' });
+      }
+    }
+    pageToken = r && r.nextPageToken;
+    if (++pages > 40) break; // safety: 40 pages × 250 = 10,000 events
+  } while (pageToken);
+  return out;
+}
+
+// Destructively wipes ALL events with a Luca iCalUID from the connected calendar.
+// Resets local sync flags so a follow-up "Sync everything now" creates a clean state.
+async function gcalWipeAllLucaEvents() {
+  if (!gcalIsConnected()) {
+    try { await gcalEnsureToken(); } catch(e) { toast('Connect Google Calendar in Settings first.'); return false; }
+  }
+  toast('Scanning Google Calendar for Luca events…');
+  let all;
+  try { all = await gcalListAllLucaEvents(); }
+  catch(e) { toast('Scan failed: ' + (e.message || e)); return false; }
+  if (!all.length) { toast('No Luca events found in this calendar — nothing to clean up.'); return false; }
+
+  // Breakdown by UID prefix so the user can see what's about to disappear.
+  const byPrefix = {};
+  for (const it of all) {
+    const parts = it.iCalUID.split('-');
+    const pref = (parts[0] || '') + '-' + (parts[1] || '') + '-';
+    byPrefix[pref] = (byPrefix[pref] || 0) + 1;
+  }
+  const breakdown = Object.entries(byPrefix)
+    .sort((a,b) => b[1] - a[1])
+    .map(([p,n]) => `  • ${p}* — ${n}`).join('\n');
+  if (!confirm(
+    `Found ${all.length} Luca event${all.length===1?'':'s'} in this Google Calendar:\n\n${breakdown}\n\n` +
+    `DELETE ALL of them?\n\n` +
+    `This is destructive and includes past dates. Use this to clean up duplicates from earlier imports. ` +
+    `After deletion, click "🔄 Sync everything now" to repopulate today + future events cleanly.`
+  )) return false;
+
+  let ok = 0, err = 0, lastErr = '';
+  for (const it of all) {
+    try { await gcalDeleteEvent(it.id); ok++; }
+    catch(e) { err++; lastErr = (e && e.message) || String(e); console.warn('delete fail', it, e); }
+  }
+
+  // Reset all local sync tracking so a follow-up Sync All builds a clean index.
+  state.gcalDirectIndex = {};
+  for (const k in state.overrides) {
+    if (!state.overrides[k]) continue;
+    delete state.overrides[k].pushed;
+    delete state.overrides[k].pushedAt;
+    delete state.overrides[k].gcalDirect;
+  }
+  for (const t of (state.travel || [])) {
+    delete t.pushed;
+    delete t.pushedAt;
+  }
+  saveState();
+  renderSchedule(); renderDashboard(); renderTravel && renderTravel(); renderAudit();
+
+  logAction('system', `Wiped ${ok} Luca event${ok===1?'':'s'} from Google Calendar (${err} error${err===1?'':'s'})${lastErr?' last: '+lastErr:''}`);
+  if (err === 0) toast(`✓ Wiped ${ok} event${ok===1?'':'s'}. Now click "🔄 Sync everything now" to repopulate.`);
+  else toast(`Wiped ${ok} event${ok===1?'':'s'}, ${err} error${err===1?'':'s'}. Re-run wipe to retry failures, then sync.`);
+  return true;
+}
+
+// Non-destructive preview — shows what gcalWipeAllLucaEvents would delete without doing it.
+async function gcalPreviewLucaEvents() {
+  if (!gcalIsConnected()) {
+    try { await gcalEnsureToken(); } catch(e) { toast('Connect Google Calendar in Settings first.'); return false; }
+  }
+  toast('Scanning…');
+  let all;
+  try { all = await gcalListAllLucaEvents(); }
+  catch(e) { toast('Scan failed: ' + (e.message || e)); return false; }
+  if (!all.length) { toast('No Luca events found in this calendar.'); return false; }
+  // Sort by UID to group duplicates visually.
+  all.sort((a,b) => a.iCalUID.localeCompare(b.iCalUID));
+  // Count duplicates by iCalUID.
+  const counts = {};
+  for (const it of all) counts[it.iCalUID] = (counts[it.iCalUID] || 0) + 1;
+  const dupes = Object.entries(counts).filter(([,n]) => n > 1);
+  console.table(all);
+  let msg = `Found ${all.length} Luca event${all.length===1?'':'s'} (see console for full list).`;
+  if (dupes.length) {
+    msg += `\n\n${dupes.length} UID${dupes.length===1?' has':'s have'} duplicates:\n` + dupes.slice(0, 10).map(([u,n]) => `  ${n}× ${u}`).join('\n');
+    if (dupes.length > 10) msg += `\n  …and ${dupes.length - 10} more`;
+  } else {
+    msg += '\n\nNo duplicate UIDs detected.';
+  }
+  alert(msg);
+  return true;
+}
+
+// ===== ONE-CLICK FULL BOOTSTRAP =====
+// Pushes EVERYTHING that's currently in state to Google Calendar: template, school,
+// school events, activities, travel, and overrides. Use when first connecting or when
+// the user wants to wipe and re-sync.
+async function gcalSyncAll() {
+  if (!gcalIsConnected()) {
+    try { await gcalEnsureToken(); } catch(e) {
+      toast('Connect Google Calendar in Settings first.');
+      return false;
+    }
+  }
+  if (!confirm('Push EVERYTHING (today + future) to Google Calendar?\n\n• Standard weekly schedule (split around school)\n• School block\n• School events\n• Recurring activities\n• Travel\n• All future overrides\n\nThis is idempotent — re-running updates existing events in place. Past dates are never touched.')) return false;
+  toast('Bootstrapping Google Calendar — this may take a few seconds…');
+  const todayKey = formatDateKey(todayLocal());
+  let ok = 0, err = 0;
+  try { await gcalSyncTemplate(); ok++; } catch(e){ err++; console.warn(e); }
+  try { await gcalSyncSchoolBlock(); ok++; } catch(e){ err++; console.warn(e); }
+  for (const ev of (state.schoolEvents || [])) {
+    try { await gcalSyncSchoolEvent(ev); ok++; } catch(e){ err++; console.warn(e); }
+  }
+  for (const a of (state.activities || [])) {
+    try { await gcalSyncActivity(a); ok++; } catch(e){ err++; console.warn(e); }
+  }
+  for (const t of (state.travel || [])) {
+    if ((t.end || t.start) < todayKey) continue;
+    try { await gcalSyncTravel(t); ok++; } catch(e){ err++; console.warn(e); }
+  }
+  for (const key of Object.keys(state.overrides || {})) {
+    if (key < todayKey) continue;
+    const o = state.overrides[key];
+    if (!o || !o.blocks || !o.blocks.length) continue;
+    try { await gcalSyncOverride(key); ok++; } catch(e){ err++; console.warn(e); }
+  }
+  logAction('system', `gcalSyncAll completed: ${ok} ops, ${err} errors`);
+  toast(`Bootstrap done: ${ok} operation${ok===1?'':'s'}${err?', '+err+' error'+(err===1?'':'s'):''}. Open Google Calendar to verify.`);
+  return true;
+}
+
 // Format a local Date as ISO without timezone marker — Calendar API combines this with timeZone field.
 function gcalISOLocal(d) {
   const p = n => String(n).padStart(2, '0');
@@ -1717,8 +2385,8 @@ function whoRoleClass(w) { return w; }
 // Compute the blocks for a specific date (consider overrides, template, travel)
 function blocksForDate(date) {
   const key = formatDateKey(date);
-  // Override first
-  if (state.overrides[key]) return state.overrides[key].blocks;
+  // Override first — still clip around school hours so totals stay clean.
+  if (state.overrides[key]) return clipBlocksForSchool(state.overrides[key].blocks, date);
 
   // Template: for each template block, figure out which portion falls on this date
   const dow = date.getDay();
@@ -1741,19 +2409,72 @@ function blocksForDate(date) {
       blocks.push({ who: b.who, start, end });
     }
   }
-  return blocks;
+  return clipBlocksForSchool(blocks, date);
 }
 
-// Primary "who" for a given date (longest block)
+// Returns the school block on this date, or null if not a school day.
+function schoolBlockForDate(date) {
+  const cfg = state.schoolConfig;
+  if (!cfg || !cfg.enabled) return null;
+  if (!cfg.days.includes(date.getDay())) return null;
+  const key = formatDateKey(date);
+  if (cfg.yearStart && key < cfg.yearStart) return null;
+  if (cfg.yearEnd && key > cfg.yearEnd) return null;
+  // If a school event marked as 'break' or 'holiday' covers this date, skip school.
+  for (const ev of state.schoolEvents || []) {
+    if ((ev.category === 'break' || ev.category === 'holiday') && eventCoversDate(ev, date)) return null;
+  }
+  return { start: cfg.start, end: cfg.end, name: cfg.name || 'School' };
+}
+
+// Subtract the school window from parent blocks on this date so there's no overlap.
+function clipBlocksForSchool(blocks, date) {
+  const sb = schoolBlockForDate(date);
+  if (!sb) return blocks;
+  const sStart = minutesOf(sb.start), sEnd = minutesOf(sb.end);
+  const out = [];
+  for (const b of blocks) {
+    const bStart = minutesOf(b.start), bEnd = minutesOf(b.end);
+    // No overlap → keep as-is
+    if (bEnd <= sStart || bStart >= sEnd) { out.push(b); continue; }
+    // Leading portion before school
+    if (bStart < sStart) out.push({ who: b.who, start: b.start, end: sb.start });
+    // Trailing portion after school
+    if (bEnd > sEnd) out.push({ who: b.who, start: sb.end, end: b.end });
+  }
+  return out;
+}
+
+// True if a school event covers a given date (one-time inclusive of start..end, recurring on listed weekdays within window)
+function eventCoversDate(ev, date) {
+  const key = formatDateKey(date);
+  const s = ev.startDate || '';
+  const e = ev.endDate || s;
+  if (!s) return false;
+  if (key < s || key > e) return false;
+  if (ev.type === 'recurring' && Array.isArray(ev.days) && ev.days.length) {
+    return ev.days.includes(date.getDay());
+  }
+  return true; // one-time: every day in range
+}
+
+function schoolEventsOnDate(date) {
+  return (state.schoolEvents || []).filter(ev => eventCoversDate(ev, date));
+}
+
+// Primary "who" for a given date — parent with the MOST minutes that day.
+// Sums across all blocks so that split blocks (morning + after-school) are
+// attributed correctly.
 function primaryWho(date) {
   const blocks = blocksForDate(date);
   if (!blocks.length) return null;
-  let best = blocks[0], bestLen = -1;
+  const tot = {};
   for (const b of blocks) {
-    const len = minutesOf(b.end) - minutesOf(b.start);
-    if (len > bestLen) { bestLen = len; best = b; }
+    tot[b.who] = (tot[b.who] || 0) + Math.max(0, minutesOf(b.end) - minutesOf(b.start));
   }
-  return best.who;
+  let best = null, bestLen = -1;
+  for (const w in tot) { if (tot[w] > bestLen) { bestLen = tot[w]; best = w; } }
+  return best;
 }
 function minutesOf(hhmm) {
   const [h,m] = hhmm.split(':').map(Number);
@@ -1858,16 +2579,28 @@ function renderDashboard() {
   // Today's timeline
   const tl = [];
   const todayBlocks = blocksForDate(today);
+  const todaySchool = schoolBlockForDate(today);
+  const timelineItems = [];
   for (const b of todayBlocks) {
-    tl.push(`<div class="timeline-item">
-      <div class="timeline-time">${fmtTime(b.start)} – ${fmtTime(b.end)}</div>
-      <div class="timeline-text">With <b>${whoLabel(b.who)}</b></div>
-    </div>`);
+    timelineItems.push({ start: b.start, end: b.end, html: `<b>With ${whoLabel(b.who)}</b>` });
+  }
+  if (todaySchool) {
+    timelineItems.push({ start: todaySchool.start, end: todaySchool.end, html: `🏫 ${todaySchool.name}` });
+  }
+  for (const ev of schoolEventsOnDate(today)) {
+    const s = ev.allDay ? '00:00' : (ev.start || '00:00');
+    const e = ev.allDay ? '23:59' : (ev.end || s);
+    timelineItems.push({ start: s, end: e, html: `${schoolEventIcon(ev)} ${ev.title}${ev.location?` <span class="media-tag">${ev.location}</span>`:''}`, allDay: ev.allDay });
   }
   for (const a of activitiesOnDate(today)) {
+    timelineItems.push({ start: a.start, end: a.end, html: `🎯 ${a.name}${a.location?` <span class="media-tag">${a.location}</span>`:''}` });
+  }
+  timelineItems.sort((a,b) => minutesOf(a.start) - minutesOf(b.start));
+  for (const it of timelineItems) {
+    const tm = it.allDay ? 'All day' : `${fmtTime(it.start)} – ${fmtTime(it.end)}`;
     tl.push(`<div class="timeline-item">
-      <div class="timeline-time">${fmtTime(a.start)} – ${fmtTime(a.end)}</div>
-      <div class="timeline-text">🎯 ${a.name}${a.location?` <span class="media-tag">${a.location}</span>`:''}</div>
+      <div class="timeline-time">${tm}</div>
+      <div class="timeline-text">${it.html}</div>
     </div>`);
   }
   for (const t of travelOnDate(today)) {
@@ -1877,6 +2610,118 @@ function renderDashboard() {
     </div>`);
   }
   document.getElementById('dash-today').innerHTML = tl.length ? `<div class="timeline">${tl.join('')}</div>` : '<div class="empty">Nothing scheduled.</div>';
+
+  renderMonthStats();
+  renderDashboardSchoolEvents();
+}
+
+// ===== MONTHLY STATS =====
+// Loops every day of the current month. For each day, counts the longest-block
+// parent as the "day" owner, and sums minutes per parent from blocksForDate
+// (which already clips school hours).
+function computeMonthStats(year, month) {
+  const totals = {
+    dad: { days: 0, mins: 0, futureDays: 0, futureMins: 0 },
+    mom: { days: 0, mins: 0, futureDays: 0, futureMins: 0 },
+    gp:  { days: 0, mins: 0, futureDays: 0, futureMins: 0 }
+  };
+  const today = todayLocal();
+  const todayKey = formatDateKey(today);
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const key = formatDateKey(date);
+    const isFuture = key > todayKey;
+    const blocks = blocksForDate(date);
+    const p = primaryWho(date);
+    if (p && totals[p]) {
+      if (isFuture) totals[p].futureDays++;
+      else totals[p].days++;
+    }
+    for (const b of blocks) {
+      const mins = Math.max(0, minutesOf(b.end) - minutesOf(b.start));
+      if (totals[b.who]) {
+        if (isFuture) totals[b.who].futureMins += mins;
+        else totals[b.who].mins += mins;
+      }
+    }
+  }
+  return { totals, daysInMonth };
+}
+function fmtHours(mins) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+function renderMonthStats() {
+  const el = document.getElementById('month-stats');
+  if (!el) return;
+  const today = todayLocal();
+  const year = today.getFullYear(), month = today.getMonth();
+  document.getElementById('month-stats-title').textContent = `${MONTHS[month]} ${year} — parenting time`;
+  const { totals, daysInMonth } = computeMonthStats(year, month);
+  const parents = [
+    { key: 'dad', label: 'Dad', name: state.settings.parentA.name },
+    { key: 'mom', label: 'Mom', name: state.settings.parentB.name },
+    { key: 'gp',  label: 'Grandparents', name: state.settings.grandparents.name || 'Grandparents' }
+  ];
+  // Find totals for max-width bar
+  const projTotals = parents.map(p => totals[p.key].days + totals[p.key].futureDays);
+  const maxProj = Math.max(1, ...projTotals);
+  el.innerHTML = parents.map(p => {
+    const t = totals[p.key];
+    const projDays = t.days + t.futureDays;
+    const projMins = t.mins + t.futureMins;
+    const pct = Math.round((projDays / daysInMonth) * 100);
+    const barPct = Math.round((projDays / maxProj) * 100);
+    return `<div class="stat">
+      <div class="stat-label">${p.name} <span style="font-weight:400; text-transform:none; letter-spacing:0;">(${p.label})</span></div>
+      <div class="stat-value">${t.days}d <span style="font-size:14px; font-weight:500; color:var(--ink-soft);">· ${fmtHours(t.mins)}</span></div>
+      <div class="stat-sub">So far this month</div>
+      <div class="bar-rail"><div class="bar-fill ${p.key}" style="width: ${barPct}%;"></div></div>
+      <div class="stat-proj">Projected: <b>${projDays} days</b> · <b>${fmtHours(projMins)}</b> <span style="color:var(--ink-soft); font-weight:400;">(${pct}% of month)</span></div>
+      <div class="stat-sub">Remaining: ${t.futureDays} days · ${fmtHours(t.futureMins)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDashboardSchoolEvents() {
+  const el = document.getElementById('dash-school-events');
+  if (!el) return;
+  const today = todayLocal();
+  const horizon = addDays(today, 30);
+  const items = [];
+  for (const ev of (state.schoolEvents || [])) {
+    // For one-time: include if start..end intersects [today, +30d]
+    if (ev.type === 'onetime') {
+      if (ev.endDate >= formatDateKey(today) && ev.startDate <= formatDateKey(horizon)) {
+        items.push({ ev, when: ev.startDate });
+      }
+    } else {
+      // recurring: find next 1-2 occurrences in window
+      let count = 0;
+      for (let i = 0; i < 30 && count < 2; i++) {
+        const d = addDays(today, i);
+        if (eventCoversDate(ev, d)) {
+          items.push({ ev, when: formatDateKey(d) });
+          count++;
+        }
+      }
+    }
+  }
+  items.sort((a,b) => a.when.localeCompare(b.when));
+  if (!items.length) { el.innerHTML = '<div class="empty">Nothing in the next 30 days.</div>'; return; }
+  el.innerHTML = items.slice(0, 8).map(({ev, when}) => {
+    const t = ev.allDay ? 'All day' : (ev.start ? `${fmtTime(ev.start)}${ev.end?'–'+fmtTime(ev.end):''}` : '');
+    return `<div class="list-item">
+      <div class="list-main">
+        <div class="list-title">${schoolEventIcon(ev)} ${ev.title}</div>
+        <div class="list-sub">${when} · ${t}${ev.location?` · ${ev.location}`:''}</div>
+      </div>
+      <span class="badge badge-school">${ev.category||'event'}</span>
+    </div>`;
+  }).join('');
 }
 
 // ===== RENDER: SCHEDULE =====
@@ -1900,6 +2745,8 @@ function renderSchedule() {
     const blocks = blocksForDate(d);
     const travel = travelOnDate(d);
     const acts = activitiesOnDate(d);
+    const sb = schoolBlockForDate(d);
+    const schEvs = schoolEventsOnDate(d);
     const cell = document.createElement('div');
     cell.className = 'day-cell' + (isToday ? ' today' : '');
     cell.onclick = () => openDayModal(d);
@@ -1911,7 +2758,9 @@ function renderSchedule() {
         <div class="day-name">${DAYS[d.getDay()]}</div>
         <div class="day-date">${d.getDate()}</div>
       </div>
+      ${sb ? `<div class="day-block school">🏫 ${sb.name} ${fmtTime(sb.start)}–${fmtTime(sb.end)}</div>` : ''}
       ${blocks.map(b => `<div class="day-block ${b.who} ${isOverride?'override':''}">${whoLabel(b.who)} ${fmtTime(b.start)}–${fmtTime(b.end)}</div>`).join('')}
+      ${schEvs.map(e => `<div class="day-block school-event" title="${(e.notes||'').replace(/"/g,'&quot;')}">${schoolEventIcon(e)} ${e.title}${e.allDay?'':e.start?` ${fmtTime(e.start)}`:''}</div>`).join('')}
       ${acts.map(a => `<div class="day-block activity">${fmtTime(a.start)} ${a.name}</div>`).join('')}
       ${travel.map(t => `<div class="day-block unavail">${whoLabel(t.who)} away</div>`).join('')}
     `;
@@ -1920,6 +2769,8 @@ function renderSchedule() {
 
   renderTemplateEditor();
   renderActivities();
+  renderSchoolConfig();
+  renderSchoolEvents();
   renderUnsyncedBanner();
 }
 function renderUnsyncedBanner() {
@@ -1985,6 +2836,7 @@ function saveTemplate() {
   renderDashboard();
   renderAudit();
   toast('Template saved.');
+  if (gcalAhead()) gcalSyncTemplate().catch(e => console.warn(e));
 }
 
 function renderActivities() {
@@ -2014,21 +2866,186 @@ function saveActivity() {
   if (!name) return toast('Name required');
   const days = [];
   for (let i = 0; i < 7; i++) if (document.getElementById('ac-d'+i).checked) days.push(i);
-  state.activities.push({
+  const a = {
     id: 'a'+Date.now(), name,
     days, start: document.getElementById('ac-start').value,
     end: document.getElementById('ac-end').value,
     location: document.getElementById('ac-loc').value.trim()
-  });
+  };
+  state.activities.push(a);
   logAction('schedule', `Added recurring activity — ${name} (${days.map(d=>DAYS[d]).join(', ')})`);
   saveState(); closeModal('activity-modal'); renderSchedule(); renderDashboard(); renderAudit();
+  if (gcalAhead()) gcalSyncActivity(a).catch(e => console.warn(e));
 }
 function deleteActivity(id) {
   if (!confirm('Delete this activity?')) return;
   const a = state.activities.find(a => a.id === id);
-  state.activities = state.activities.filter(a => a.id !== id);
+  state.activities = state.activities.filter(x => x.id !== id);
   logAction('schedule', `Deleted activity${a ? ' — '+a.name : ''}`);
   saveState(); renderSchedule(); renderDashboard(); renderAudit();
+  if (gcalAhead() && a) gcalDeleteActivity(a).catch(e => console.warn(e));
+}
+
+// ===== SCHOOL CONFIG =====
+function renderSchoolConfig() {
+  const c = state.schoolConfig || {};
+  const el = (id) => document.getElementById(id);
+  if (!el('sch-start')) return;
+  el('sch-start').value = c.start || '08:30';
+  el('sch-end').value = c.end || '15:00';
+  el('sch-enabled').checked = c.enabled !== false;
+  el('sch-year-start').value = c.yearStart || '';
+  el('sch-year-end').value = c.yearEnd || '';
+  for (let i = 0; i < 7; i++) {
+    el('sch-d'+i).checked = (c.days || []).includes(i);
+  }
+}
+function saveSchoolConfig() {
+  const days = [];
+  for (let i = 0; i < 7; i++) if (document.getElementById('sch-d'+i).checked) days.push(i);
+  state.schoolConfig = {
+    enabled: document.getElementById('sch-enabled').checked,
+    days,
+    start: document.getElementById('sch-start').value || '08:30',
+    end: document.getElementById('sch-end').value || '15:00',
+    name: state.schoolConfig.name || 'School',
+    yearStart: document.getElementById('sch-year-start').value || '',
+    yearEnd: document.getElementById('sch-year-end').value || ''
+  };
+  logAction('schedule', `Updated school hours: ${state.schoolConfig.start}–${state.schoolConfig.end} (${days.map(d=>DAYS[d]).join(', ')})`);
+  saveState(); renderSchedule(); renderDashboard(); renderAudit();
+  toast('School hours saved.');
+  if (gcalAhead()) {
+    // School hours affect both the school block AND parent chunk splits.
+    gcalSyncSchoolBlock().catch(e => console.warn(e));
+    gcalSyncTemplate().catch(e => console.warn(e));
+  }
+}
+
+// ===== SCHOOL EVENTS =====
+function schoolEventIcon(ev) {
+  switch (ev.category) {
+    case 'meeting': return '👥';
+    case 'trip': return '🚌';
+    case 'break': return '🌴';
+    case 'holiday': return '🎉';
+    default: return '🏫';
+  }
+}
+function renderSchoolEvents() {
+  const el = document.getElementById('school-events-list');
+  if (!el) return;
+  const list = (state.schoolEvents || []).slice().sort((a,b)=> (a.startDate||'').localeCompare(b.startDate||''));
+  if (!list.length) { el.innerHTML = '<div class="empty">No school events yet.</div>'; return; }
+  el.innerHTML = list.map(ev => {
+    const range = ev.startDate === ev.endDate ? ev.startDate : `${ev.startDate} → ${ev.endDate}`;
+    const time = ev.allDay ? 'All day' : (ev.start ? `${fmtTime(ev.start)}${ev.end?'–'+fmtTime(ev.end):''}` : '');
+    const recur = ev.type === 'recurring' && ev.days ? ` · ${ev.days.map(d=>DAYS[d]).join(', ')}` : '';
+    return `<div class="list-item">
+      <div class="list-main">
+        <div class="list-title">${schoolEventIcon(ev)} ${ev.title} <span class="badge badge-school">${ev.category||'event'}</span></div>
+        <div class="list-sub">${range} · ${time}${recur}${ev.location?` · ${ev.location}`:''}</div>
+      </div>
+      <div class="list-actions">
+        <button class="btn btn-sm btn-ghost" onclick="openSchoolEventModal('${ev.id}')">Edit</button>
+        <button class="btn btn-sm btn-ghost" onclick="deleteSchoolEvent('${ev.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openSchoolEventModal(id) {
+  const ev = id ? (state.schoolEvents || []).find(e => e.id === id) : null;
+  document.getElementById('school-event-modal-title').textContent = ev ? 'Edit school event' : 'Add school event';
+  document.getElementById('se-delete-btn').style.display = ev ? '' : 'none';
+  document.getElementById('se-id').value = ev ? ev.id : '';
+  document.getElementById('se-title').value = ev ? ev.title : '';
+  document.getElementById('se-type').value = ev ? ev.type : 'onetime';
+  document.getElementById('se-category').value = ev ? (ev.category || 'event') : 'event';
+  const today = formatDateKey(todayLocal());
+  document.getElementById('se-start-date').value = ev ? ev.startDate : today;
+  document.getElementById('se-end-date').value = ev ? ev.endDate : today;
+  document.getElementById('se-allday').checked = ev ? !!ev.allDay : false;
+  document.getElementById('se-start').value = ev ? (ev.start || '09:00') : '09:00';
+  document.getElementById('se-end').value = ev ? (ev.end || '10:00') : '10:00';
+  document.getElementById('se-location').value = ev ? (ev.location || '') : '';
+  document.getElementById('se-notes').value = ev ? (ev.notes || '') : '';
+  for (let i = 0; i < 7; i++) {
+    document.getElementById('se-d'+i).checked = ev && ev.days ? ev.days.includes(i) : false;
+  }
+  toggleSchoolEventType();
+  toggleAllDay();
+  openModal('school-event-modal');
+}
+function toggleSchoolEventType() {
+  const t = document.getElementById('se-type').value;
+  document.getElementById('se-recurring-row').style.display = t === 'recurring' ? '' : 'none';
+}
+function toggleAllDay() {
+  const allDay = document.getElementById('se-allday').checked;
+  document.getElementById('se-time-row').style.display = allDay ? 'none' : '';
+}
+function saveSchoolEvent() {
+  const id = document.getElementById('se-id').value || ('se'+Date.now());
+  const title = document.getElementById('se-title').value.trim();
+  if (!title) return toast('Title required');
+  const startDate = document.getElementById('se-start-date').value;
+  const endDate = document.getElementById('se-end-date').value || startDate;
+  if (!startDate) return toast('Start date required');
+  if (endDate < startDate) return toast('End date must be on or after start date');
+  const type = document.getElementById('se-type').value;
+  const allDay = document.getElementById('se-allday').checked;
+  const days = [];
+  if (type === 'recurring') for (let i = 0; i < 7; i++) if (document.getElementById('se-d'+i).checked) days.push(i);
+  const ev = {
+    id, title,
+    type,
+    category: document.getElementById('se-category').value,
+    startDate, endDate,
+    allDay,
+    start: allDay ? '' : document.getElementById('se-start').value,
+    end: allDay ? '' : document.getElementById('se-end').value,
+    days,
+    location: document.getElementById('se-location').value.trim(),
+    notes: document.getElementById('se-notes').value.trim()
+  };
+  state.schoolEvents = state.schoolEvents || [];
+  const existingIdx = state.schoolEvents.findIndex(e => e.id === id);
+  if (existingIdx >= 0) state.schoolEvents[existingIdx] = ev;
+  else state.schoolEvents.push(ev);
+  logAction('schedule', `${existingIdx >= 0 ? 'Updated' : 'Added'} school event — ${title} (${startDate}${startDate!==endDate?' → '+endDate:''})`);
+  saveState(); closeModal('school-event-modal');
+  renderSchedule(); renderDashboard(); renderAudit();
+  toast('School event saved.');
+  if (gcalAhead()) {
+    gcalSyncSchoolEvent(ev).catch(e => console.warn(e));
+    // break/holiday categories alter school EXDATEs — re-push school block.
+    if (ev.category === 'break' || ev.category === 'holiday') gcalSyncSchoolBlock().catch(e => console.warn(e));
+  }
+}
+function deleteSchoolEvent(id) {
+  if (!confirm('Delete this school event?')) return;
+  const ev = (state.schoolEvents || []).find(e => e.id === id);
+  state.schoolEvents = (state.schoolEvents || []).filter(e => e.id !== id);
+  logAction('schedule', `Deleted school event${ev ? ' — '+ev.title : ''}`);
+  saveState(); renderSchedule(); renderDashboard(); renderAudit();
+  if (gcalAhead() && ev) {
+    gcalDeleteSchoolEvent(ev).catch(e => console.warn(e));
+    if (ev.category === 'break' || ev.category === 'holiday') gcalSyncSchoolBlock().catch(e => console.warn(e));
+  }
+}
+function deleteSchoolEventFromModal() {
+  const id = document.getElementById('se-id').value;
+  if (!id) return;
+  if (!confirm('Delete this school event?')) return;
+  const ev = (state.schoolEvents || []).find(e => e.id === id);
+  state.schoolEvents = (state.schoolEvents || []).filter(e => e.id !== id);
+  logAction('schedule', `Deleted school event${ev ? ' — '+ev.title : ''}`);
+  saveState(); closeModal('school-event-modal');
+  renderSchedule(); renderDashboard(); renderAudit();
+  if (gcalAhead() && ev) {
+    gcalDeleteSchoolEvent(ev).catch(e => console.warn(e));
+    if (ev.category === 'break' || ev.category === 'holiday') gcalSyncSchoolBlock().catch(e => console.warn(e));
+  }
 }
 
 // ===== DAY OVERRIDE MODAL =====
@@ -2067,6 +3084,10 @@ function openDayModal(date) {
 }
 
 function syncOverrideToGCal(key) {
+  if (key < formatDateKey(todayLocal())) {
+    toast('Past date — Google Calendar changes are blocked for dates before today.');
+    return;
+  }
   const override = state.overrides[key];
   if (!override) return;
   const d = parseDateKey(key);
@@ -2290,9 +3311,12 @@ function respondChange(id, status) {
   if (status === 'accepted') {
     applyChangeRequestToOverrides(c);
     logAction('request', `Accepted change request — ${fmtRange(c)} → ${whoLabel(c.newWho)}`, { id: c.id });
-    // Push to Google Calendar
-    if (state.settings.autoSyncGoogle) {
-      const s = combineDateTime(c.startDate, c.startTime);
+    // Push to Google Calendar (today + future only)
+    const todayKey = formatDateKey(todayLocal());
+    if (state.settings.autoSyncGoogle && (c.endDate || c.startDate) >= todayKey) {
+      // If the request started before today but extends into today/future, clamp start to today.
+      const effectiveStartKey = c.startDate < todayKey ? todayKey : c.startDate;
+      const s = combineDateTime(effectiveStartKey, c.startTime);
       const e = combineDateTime(c.endDate, c.endTime);
       const emoji = c.newWho === 'dad' ? '🔵' : c.newWho === 'mom' ? '🟢' : '🟫';
       pushToGoogleCalendar({
@@ -2300,8 +3324,8 @@ function respondChange(id, status) {
         start: s, end: e,
         description: `Schedule change accepted via Luca's Hub.\n\nWindow: ${fmtRange(c)}\nOriginal: with ${whoLabel(c.origWho)}\nChanged to: with ${whoLabel(c.newWho)}\nRequested by: ${c.byName}\nReason: ${c.reason || '—'}\nMakeup: ${c.makeup || '—'}\nReply: ${c.replyNotes || '—'}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\nNEXT STEPS:\n1. Before saving, pick the "Luca" calendar from the dropdown at top.\n2. After saving, open Google Calendar for the affected day(s) and DELETE or SHORTEN the standard recurring event (🔵 Dad / 🟢 Mom / 🟫 Grandparents) so it doesn't overlap with this override.\n   • Tap the recurring event on the specific day\n   • Select "Delete" → "This event only" (NOT "All events")`
       });
-      // Mark each affected override date as pushed
-      let d = new Date(parseDateKey(c.startDate));
+      // Mark each affected override date (today + future only) as pushed
+      let d = new Date(parseDateKey(effectiveStartKey));
       const ed = parseDateKey(c.endDate);
       while (d <= ed) { markOverridePushed(formatDateKey(d)); d = addDays(d, 1); }
       showConflictAlert(c);
@@ -2457,15 +3481,22 @@ function submitTravel() {
   logAction('travel', `Marked ${whoLabel(t.who)} unavailable ${startDate} ${fmtTime(startTime)} → ${endDate} ${fmtTime(endTime)}${t.reason?' ('+t.reason+')':''}`, { id: t.id });
   saveState(); closeModal('travel-modal'); renderTravel(); renderSchedule(); renderDashboard(); renderAudit();
 
-  if (document.getElementById('tv-push-gcal').checked) {
+  const todayKey = formatDateKey(todayLocal());
+  if (document.getElementById('tv-push-gcal').checked && endDate >= todayKey) {
     const emoji = t.who === 'dad' ? '🔴' : '🟠';
+    // If start is before today, clamp to today for the GCal event.
+    const pushStart = startDate < todayKey ? combineDateTime(todayKey, startTime) : s;
     pushToGoogleCalendar({
       summary: `${emoji} ${whoLabel(t.who)} UNAVAILABLE${t.reason?' — '+t.reason:''}`,
-      start: s, end: e,
+      start: pushStart, end: e,
       description: `${whoLabel(t.who)} is unavailable during this time.\n\nReason: ${t.reason || '—'}\nNotes: ${t.notes || '—'}\nLogged by: ${t.createdBy}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━\nBefore saving: pick the "Luca" calendar from the dropdown at top.\n\nThis entry is just a flag — it does NOT automatically change who has ${state.settings.childName}. If ${state.settings.childName} was scheduled with ${whoLabel(t.who)} during this window, open Luca's Hub and create a Schedule Change Request so the custody can be reassigned.`
     });
     markTravelPushed(t.id);
     saveState();
+  }
+  // Direct sync (no compose tab) if Direct GCal Sync is enabled.
+  if (gcalAhead() && endDate >= todayKey) {
+    gcalSyncTravel(t).catch(e => console.warn(e));
   }
   toast('Saved.' + (document.getElementById('tv-push-gcal').checked ? ' Google Calendar opening…' : ''));
 }
@@ -2498,7 +3529,14 @@ function renderTravel() {
 function syncTravelToGCal(id) {
   const t = state.travel.find(t => t.id === id);
   if (!t) return;
-  const s = combineDateTime(t.start, t.startTime || '00:00');
+  const todayKey = formatDateKey(todayLocal());
+  if ((t.end || t.start) < todayKey) {
+    toast('Past travel — Google Calendar changes are blocked for dates before today.');
+    return;
+  }
+  // If start is past but end is today/future, advance start to today.
+  const startKey = t.start < todayKey ? todayKey : t.start;
+  const s = combineDateTime(startKey, t.startTime || '00:00');
   const e = combineDateTime(t.end, t.endTime || '23:59');
   const emoji = t.who === 'dad' ? '🔴' : '🟠';
   const url = buildGoogleCalendarURL({
@@ -2521,9 +3559,10 @@ function markTravelUnpushed(id) {
 function deleteTravel(id) {
   if (!confirm('Remove this unavailability entry?')) return;
   const t = state.travel.find(t => t.id === id);
-  state.travel = state.travel.filter(t => t.id !== id);
+  state.travel = state.travel.filter(x => x.id !== id);
   logAction('travel', `Deleted travel entry${t ? ' — ' + whoLabel(t.who) + ' ' + t.start : ''}`, { id });
   saveState(); renderTravel(); renderSchedule(); renderDashboard(); renderAudit();
+  if (gcalAhead() && t) gcalDeleteTravel(t).catch(e => console.warn(e));
 }
 
 // ===== ROUTINES =====
@@ -3024,7 +4063,85 @@ function expandTemplateToDayChunks() {
       out.push({ who: b.who, dow, startTime, endTime });
     }
   }
+  // Split chunks around school hours so exported events don't overlap school.
+  // A Mon Dad 00:00-23:59 chunk becomes Mon Dad 00:00-08:30 + Mon Dad 15:00-23:59.
+  // chunkUID() embeds start/end time, so the two halves get different stable UIDs.
+  return splitChunksForSchool(out);
+}
+
+function splitChunksForSchool(chunks) {
+  const cfg = state.schoolConfig;
+  if (!cfg || !cfg.enabled) return chunks;
+  const sStart = minutesOf(cfg.start), sEnd = minutesOf(cfg.end);
+  const out = [];
+  for (const c of chunks) {
+    if (!cfg.days.includes(c.dow)) { out.push(c); continue; }
+    const cStart = minutesOf(c.startTime), cEnd = minutesOf(c.endTime);
+    if (cEnd <= sStart || cStart >= sEnd) { out.push(c); continue; }
+    if (cStart < sStart) out.push({ who: c.who, dow: c.dow, startTime: c.startTime, endTime: cfg.start });
+    if (cEnd > sEnd) out.push({ who: c.who, dow: c.dow, startTime: cfg.end, endTime: c.endTime });
+  }
   return out;
+}
+
+// Per-day school chunks (one per school weekday). UID is stable so GCal updates rather than dupes.
+function expandSchoolToDayChunks() {
+  const cfg = state.schoolConfig;
+  if (!cfg || !cfg.enabled || !cfg.days || !cfg.days.length) return [];
+  return cfg.days.map(dow => ({ dow, startTime: cfg.start, endTime: cfg.end, name: cfg.name || 'School' }));
+}
+function schoolChunkUID(c) {
+  return 'luca-school-' + c.dow + '-' + c.startTime.replace(':','') + '-' + c.endTime.replace(':','') + '@lucahub';
+}
+function schoolChunkAnchorStart(c) {
+  const d = addDays(TEMPLATE_ANCHOR_SUNDAY, c.dow);
+  const [h,m] = c.startTime.split(':').map(Number);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+function schoolChunkAnchorEnd(c) {
+  const d = addDays(TEMPLATE_ANCHOR_SUNDAY, c.dow);
+  const [h,m] = c.endTime.split(':').map(Number);
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+// EXDATEs for a school chunk: every school event marked break/holiday that lands on this dow,
+// plus the school-year-end boundary if set. (UNTIL handles year-end; this only does break/holiday EXDATEs.)
+// Skips dates before `fromKey` so past EXDATEs aren't emitted.
+function exdatesForSchoolChunk(c, fromKey, firstDate) {
+  const list = [];
+  const cutoff = fromKey || formatDateKey(todayLocal());
+  const earliestKey = firstDate ? formatDateKey(firstDate) : cutoff;
+  for (const ev of (state.schoolEvents || [])) {
+    if (ev.category !== 'break' && ev.category !== 'holiday') continue;
+    if (!ev.startDate) continue;
+    const start = parseDateKey(ev.startDate);
+    const end = parseDateKey(ev.endDate || ev.startDate);
+    for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
+      if (d.getDay() !== c.dow) continue;
+      const dk = formatDateKey(d);
+      if (dk < cutoff || dk < earliestKey) continue;
+      const [h,m] = c.startTime.split(':').map(Number);
+      const dt = new Date(d); dt.setHours(h, m, 0, 0);
+      list.push(icsDate(dt));
+    }
+  }
+  return list;
+}
+
+// Returns a Date for the first dow occurrence on or after `from` (a Date).
+function firstOccurrenceOnOrAfter(from, dow) {
+  const d = new Date(from);
+  d.setHours(0, 0, 0, 0);
+  const diff = (dow - d.getDay() + 7) % 7;
+  return addDays(d, diff);
+}
+// All-day VALUE=DATE format helper. ICS DTEND for all-day events is EXCLUSIVE (next day).
+function icsDateOnly(dateKey, addDay = 0) {
+  const d = parseDateKey(dateKey);
+  if (addDay) d.setDate(d.getDate() + addDay);
+  const pad = n => String(n).padStart(2,'0');
+  return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate());
 }
 // Stable UID — same across exports so GCal updates the existing recurring event.
 function chunkUID(c) {
@@ -3043,11 +4160,16 @@ function chunkAnchorEnd(c) {
   return d;
 }
 // All EXDATE strings for a chunk — every override that lands on this dow.
-function exdatesForChunk(c) {
+// Skips dates before `fromKey` (so we don't EXDATE occurrences GCal will never create
+// because DTSTART is anchored to the first on/after today).
+function exdatesForChunk(c, fromKey, firstDate) {
   const list = [];
+  const cutoff = fromKey || formatDateKey(todayLocal());
   for (const key of Object.keys(state.overrides)) {
     const o = state.overrides[key];
     if (!o || !o.blocks || !o.blocks.length) continue;
+    if (key < cutoff) continue;
+    if (firstDate && key < formatDateKey(firstDate)) continue;
     const d = parseDateKey(key);
     if (d.getDay() !== c.dow) continue;
     const [h,m] = c.startTime.split(':').map(Number);
@@ -3063,18 +4185,23 @@ function exdatesForChunk(c) {
 // GCal recurring events first, then import this file). After that, per-override updates
 // can use exportOverrideCancellationICS for surgical pushes.
 function exportFullScheduleICS() {
-  if (!confirm('Export FULL schedule (standard recurring events + every override + travel)?\n\nIMPORTANT: Before importing this into Google Calendar, DELETE any existing hand-made recurring events for Luca\'s parenting time. Otherwise you\'ll have duplicates.\n\nContinue?')) return;
+  if (!confirm('Export FULL schedule (today + future only)?\n\nThis emits the standard recurring schedule, school block, school events, overrides, and travel — all anchored to today or later. Past dates are NEVER pushed to Google Calendar.\n\nIMPORTANT:\n• Before importing this, DELETE any existing hand-made recurring "Luca with Dad/Mom" events from Google Calendar.\n• If you previously imported a Luca Hub schedule WITHOUT the school carve-out, also delete those old recurring events first — chunk UIDs have changed because parent blocks are now split around school hours.\n\nContinue?')) return;
   const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Luca Hub//EN','METHOD:PUBLISH','CALSCALE:GREGORIAN'];
   let count = 0;
   state.exportSequence = (state.exportSequence || 0) + 1;
   const seq = state.exportSequence;
+  const todayDate = todayLocal();
+  const todayKey = formatDateKey(todayDate);
 
-  // 1. Standard schedule — one RRULE event per per-day chunk.
+  // 1. Standard schedule — one RRULE event per per-day chunk (now split around school).
+  // DTSTART is anchored to the first occurrence on or after today so GCal never
+  // creates retroactive past events.
   const chunks = expandTemplateToDayChunks();
   for (const c of chunks) {
-    const s = chunkAnchorStart(c);
-    const e = chunkAnchorEnd(c);
-    const ex = exdatesForChunk(c);
+    const firstDate = firstOccurrenceOnOrAfter(todayDate, c.dow);
+    const s = combineDateTime(formatDateKey(firstDate), c.startTime);
+    const e = combineDateTime(formatDateKey(firstDate), c.endTime);
+    const ex = exdatesForChunk(c, todayKey, firstDate);
     const emoji = c.who==='dad'?'🔵 ':c.who==='mom'?'🟢 ':'🟫 ';
     lines.push('BEGIN:VEVENT');
     lines.push('UID:' + chunkUID(c));
@@ -3085,15 +4212,119 @@ function exportFullScheduleICS() {
     lines.push('RRULE:FREQ=WEEKLY;BYDAY=' + ICS_DOW[c.dow]);
     if (ex.length) lines.push('EXDATE:' + ex.join(','));
     lines.push('SUMMARY:' + emoji + state.settings.childName + ' — with ' + whoLabel(c.who));
-    lines.push('DESCRIPTION:Standard weekly schedule from Luca\'s Hub. Override days for this weekday are excluded via EXDATE and appear as separate (override) events.');
+    lines.push('DESCRIPTION:Standard weekly schedule from Luca\'s Hub. School hours are carved out into separate events. Override days are excluded via EXDATE and appear as separate (override) events.');
     lines.push('END:VEVENT');
     count++;
   }
 
+  // 1b. School block — one RRULE event per school weekday. UNTIL = schoolYearEnd if set.
+  // Anchored to first occurrence on/after today so no past school events are created.
+  const cfg = state.schoolConfig || {};
+  if (cfg.enabled) {
+    const schoolChunks = expandSchoolToDayChunks();
+    const until = cfg.yearEnd ? icsDateOnly(cfg.yearEnd, 1) + 'T000000' : null;
+    for (const c of schoolChunks) {
+      const firstDate = firstOccurrenceOnOrAfter(todayDate, c.dow);
+      const s = combineDateTime(formatDateKey(firstDate), c.startTime);
+      const e = combineDateTime(formatDateKey(firstDate), c.endTime);
+      const ex = exdatesForSchoolChunk(c, todayKey, firstDate);
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:' + schoolChunkUID(c));
+      lines.push('DTSTAMP:' + icsDate(new Date()));
+      lines.push('SEQUENCE:' + seq);
+      lines.push('DTSTART:' + icsDate(s));
+      lines.push('DTEND:' + icsDate(e));
+      lines.push('RRULE:FREQ=WEEKLY;BYDAY=' + ICS_DOW[c.dow] + (until ? ';UNTIL=' + until : ''));
+      if (ex.length) lines.push('EXDATE:' + ex.join(','));
+      lines.push('SUMMARY:🏫 ' + (c.name || 'School'));
+      lines.push('DESCRIPTION:School hours from Luca\'s Hub. Excluded from each parent\'s time totals.');
+      lines.push('END:VEVENT');
+      count++;
+    }
+  }
+
+  // 1c. School events — one-time and recurring (today + future only).
+  for (const ev of (state.schoolEvents || [])) {
+    if (!ev.startDate) continue;
+    const evEnd = ev.endDate || ev.startDate;
+    if (evEnd < todayKey) continue; // entire event is in the past
+    const icon = (typeof schoolEventIcon === 'function') ? schoolEventIcon(ev) : '🏫';
+    const summary = icon + ' ' + ev.title;
+    const desc = (ev.notes || '').replace(/\n/g, '\\n');
+    const loc = ev.location || '';
+    if (ev.type === 'recurring' && Array.isArray(ev.days) && ev.days.length) {
+      // One VEVENT per weekday, RRULE WEEKLY until endDate (if set).
+      // Anchor is max(today, startDate) so no past instances are created.
+      const effectiveStartKey = ev.startDate < todayKey ? todayKey : ev.startDate;
+      const start = parseDateKey(effectiveStartKey);
+      const until = ev.endDate ? icsDateOnly(ev.endDate, 1) + 'T000000' : null;
+      for (const dow of ev.days) {
+        // Find first occurrence on or after effective start matching this dow.
+        let anchor = new Date(start);
+        const diff = (dow - anchor.getDay() + 7) % 7;
+        anchor = addDays(anchor, diff);
+        let s, e;
+        if (ev.allDay) {
+          const sKey = formatDateKey(anchor);
+          s = 'DTSTART;VALUE=DATE:' + icsDateOnly(sKey);
+          e = 'DTEND;VALUE=DATE:' + icsDateOnly(sKey, 1);
+        } else {
+          const [sh, sm] = (ev.start || '09:00').split(':').map(Number);
+          const [eh, em] = (ev.end || ev.start || '10:00').split(':').map(Number);
+          const sd = new Date(anchor); sd.setHours(sh, sm, 0, 0);
+          const ed = new Date(anchor); ed.setHours(eh, em, 0, 0);
+          s = 'DTSTART:' + icsDate(sd);
+          e = 'DTEND:' + icsDate(ed);
+        }
+        lines.push('BEGIN:VEVENT');
+        lines.push('UID:luca-schoolevt-' + ev.id + '-' + dow + '@lucahub');
+        lines.push('DTSTAMP:' + icsDate(new Date()));
+        lines.push('SEQUENCE:' + seq);
+        lines.push(s);
+        lines.push(e);
+        lines.push('RRULE:FREQ=WEEKLY;BYDAY=' + ICS_DOW[dow] + (until ? ';UNTIL=' + until : ''));
+        lines.push('SUMMARY:' + summary);
+        if (loc) lines.push('LOCATION:' + loc);
+        if (desc) lines.push('DESCRIPTION:' + desc);
+        lines.push('END:VEVENT');
+        count++;
+      }
+    } else {
+      // One-time event — startDate..endDate. Single VEVENT spanning the range.
+      // If the event already started before today, advance the start to today.
+      const endKey = ev.endDate || ev.startDate;
+      const effectiveStartKey = ev.startDate < todayKey ? todayKey : ev.startDate;
+      let s, e;
+      if (ev.allDay) {
+        s = 'DTSTART;VALUE=DATE:' + icsDateOnly(effectiveStartKey);
+        e = 'DTEND;VALUE=DATE:' + icsDateOnly(endKey, 1);
+      } else {
+        const sd = combineDateTime(effectiveStartKey, ev.start || '09:00');
+        const ed = combineDateTime(endKey, ev.end || ev.start || '10:00');
+        s = 'DTSTART:' + icsDate(sd);
+        e = 'DTEND:' + icsDate(ed);
+      }
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:luca-schoolevt-' + ev.id + '@lucahub');
+      lines.push('DTSTAMP:' + icsDate(new Date()));
+      lines.push('SEQUENCE:' + seq);
+      lines.push(s);
+      lines.push(e);
+      lines.push('SUMMARY:' + summary);
+      if (loc) lines.push('LOCATION:' + loc);
+      if (desc) lines.push('DESCRIPTION:' + desc);
+      lines.push('END:VEVENT');
+      count++;
+    }
+  }
+
   // 2. Override day VEVENTs.
+  // Today + future only — past dates are never pushed to Google Calendar.
+  let skippedPastOverrides = 0;
   for (const key of Object.keys(state.overrides)) {
     const o = state.overrides[key];
     if (!o || !o.blocks || !o.blocks.length) continue;
+    if (key < todayKey) { skippedPastOverrides++; continue; }
     const d = parseDateKey(key);
     for (const b of o.blocks) {
       const [sh,sm] = b.start.split(':').map(Number);
@@ -3114,9 +4345,12 @@ function exportFullScheduleICS() {
     }
   }
 
-  // 3. Travel / unavailability.
+  // 3. Travel / unavailability (today + future only).
   for (const t of state.travel) {
-    const s = combineDateTime(t.start, t.startTime || '00:00');
+    if ((t.end || t.start) < todayKey) continue; // entirely past
+    // If t.start is past but t.end is today/future, advance start to today.
+    const startKey = t.start < todayKey ? todayKey : t.start;
+    const s = combineDateTime(startKey, t.startTime || '00:00');
     const e = combineDateTime(t.end, t.endTime || '23:59');
     const emoji = t.who === 'dad' ? '🔴 ' : '🟠 ';
     lines.push('BEGIN:VEVENT');
@@ -3137,17 +4371,21 @@ function exportFullScheduleICS() {
   const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
   downloadBlob(blob, 'luca-full-schedule-' + formatDateKey(todayLocal()) + '.ics');
 
-  // Mark every override and travel as synced — they're inside this export.
+  // Mark every override and travel that was actually exported (today + future) as synced.
   for (const key of Object.keys(state.overrides)) {
+    if (key < todayKey) continue;
     if (state.overrides[key] && state.overrides[key].blocks && state.overrides[key].blocks.length) {
       markOverridePushed(key);
     }
   }
-  for (const t of state.travel) markTravelPushed(t.id);
-  logAction('system', 'Exported FULL schedule (' + count + ' events, seq=' + seq + ') — RRULE + EXDATE');
+  for (const t of state.travel) {
+    if ((t.end || t.start) < todayKey) continue;
+    markTravelPushed(t.id);
+  }
+  logAction('system', 'Exported FULL schedule (' + count + ' events, seq=' + seq + ', today+future only, skipped ' + skippedPastOverrides + ' past override day(s))');
   saveState();
   renderAll();
-  toast('Exported ' + count + ' events. Import to GCal.');
+  toast('Exported ' + count + ' events (today + future only)' + (skippedPastOverrides ? '. ' + skippedPastOverrides + ' past override day' + (skippedPastOverrides===1?'':'s') + ' skipped' : '') + '.');
 }
 
 // ===== PER-OVERRIDE CANCELLATION EXPORT =====
@@ -3156,6 +4394,10 @@ function exportFullScheduleICS() {
 // imported the full schedule once (so the UIDs match). Importing this file makes GCal
 // remove just that one occurrence of the standard event and add the override.
 function exportOverrideCancellationICS(key) {
+  if (key < formatDateKey(todayLocal())) {
+    toast('Past date — Google Calendar changes are blocked for dates before today.');
+    return;
+  }
   const override = state.overrides[key];
   if (!override || !override.blocks || !override.blocks.length) { toast('No override on this day.'); return; }
   const d = parseDateKey(key);
@@ -3219,12 +4461,16 @@ function exportICS(includeAlreadySynced) {
   const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Luca Hub//EN','CALSCALE:GREGORIAN'];
   let eventCount = 0;
   let skippedCount = 0;
+  let skippedPast = 0;
   const pushedNow = [];
+  const todayKey = formatDateKey(todayLocal());
 
-  // 1. Day overrides (custom per-day schedules, including accepted change requests)
+  // 1. Day overrides — today + future only. Past overrides are NEVER pushed
+  // to Google Calendar, per the "only today and future" policy.
   for (const key of Object.keys(state.overrides)) {
     const override = state.overrides[key];
     if (!override || !override.blocks || !override.blocks.length) continue;
+    if (key < todayKey) { skippedPast++; continue; }
     if (!includeAlreadySynced && override.pushed) { skippedCount++; continue; }
     const d = parseDateKey(key);
     for (const b of override.blocks) {
@@ -3246,10 +4492,12 @@ function exportICS(includeAlreadySynced) {
     pushedNow.push({ type: 'override', key });
   }
 
-  // 2. Travel / unavailability entries
+  // 2. Travel / unavailability entries (today + future only)
   for (const t of state.travel) {
+    if ((t.end || t.start) < todayKey) { skippedPast++; continue; }
     if (!includeAlreadySynced && t.pushed) { skippedCount++; continue; }
-    const s = combineDateTime(t.start, t.startTime || '00:00');
+    const startKey = t.start < todayKey ? todayKey : t.start;
+    const s = combineDateTime(startKey, t.startTime || '00:00');
     const e = combineDateTime(t.end, t.endTime || '23:59');
     const emoji = t.who === 'dad' ? '🔴 ' : '🟠 ';
     lines.push('BEGIN:VEVENT');
@@ -3267,8 +4515,11 @@ function exportICS(includeAlreadySynced) {
   lines.push('END:VCALENDAR');
 
   if (eventCount === 0) {
-    if (skippedCount > 0) {
-      toast(`Nothing new to export — all ${skippedCount} deviation${skippedCount===1?'':'s'} already synced to Google Calendar.`);
+    if (skippedCount > 0 || skippedPast > 0) {
+      const parts = [];
+      if (skippedCount > 0) parts.push(`${skippedCount} already synced`);
+      if (skippedPast > 0) parts.push(`${skippedPast} in the past`);
+      toast(`Nothing new to export — ${parts.join(', ')}.`);
     } else {
       toast('Nothing to export — no overrides or travel entries yet.');
     }
@@ -3278,7 +4529,7 @@ function exportICS(includeAlreadySynced) {
   downloadBlob(blob, `luca-deviations-${formatDateKey(todayLocal())}.ics`);
 
   // Mark everything in this export as pushed (the user is about to import it)
-  if (confirm(`Exported ${eventCount} deviation${eventCount===1?'':'s'}${skippedCount?` (${skippedCount} already-synced item${skippedCount===1?'':'s'} skipped)`:''}.\n\nAfter you import this file into Google Calendar, click OK to mark these as synced so they won't appear in future exports.\n\nClick Cancel if you haven't imported it yet.`)) {
+  if (confirm(`Exported ${eventCount} deviation${eventCount===1?'':'s'} (today + future only)${skippedPast?` — ${skippedPast} past item${skippedPast===1?'':'s'} skipped`:''}${skippedCount?` — ${skippedCount} already-synced future item${skippedCount===1?'':'s'} skipped`:''}.\n\nAfter you import this file into Google Calendar, click OK to mark these as synced so they won't appear in future exports.\n\nClick Cancel if you haven't imported it yet.`)) {
     for (const p of pushedNow) {
       if (p.type === 'override') markOverridePushed(p.key);
       else if (p.type === 'travel') markTravelPushed(p.id);
