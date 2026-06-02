@@ -346,6 +346,8 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
   .view { display: block !important; }
 }
 </style>
+<!-- Google Identity Services (used only after the user enables Direct Calendar Sync in Settings). -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -859,6 +861,33 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
       <button class="btn" style="margin-top: 12px;" onclick="saveGCalSettings()">Save sync prefs</button>
     </div>
 
+    <div class="card" style="border: 2px solid var(--accent);">
+      <h2>🔗 Direct Google Calendar sync <span style="font-size:11px; background: var(--accent); color:#fff; padding: 2px 8px; border-radius: 10px; vertical-align: middle;">RECOMMENDED</span></h2>
+      <p style="color: var(--ink-soft); font-size: 13px;">
+        When connected, saving an override <b>automatically cancels the matching standard recurring event for that day</b> and creates the override events in Google Calendar — no .ics downloads, no manual cleanup. Reverting an override restores the standard event.
+      </p>
+      <p style="color: var(--ink-soft); font-size: 13px;">
+        <b>One-time setup</b> (15 min): create a free Google Cloud OAuth Client ID, paste it below, click Connect. Setup guide: <a href="#" onclick="openOAuthSetupHelp(); return false;">step-by-step instructions</a>.
+      </p>
+      <label>Google OAuth 2.0 Client ID</label>
+      <input id="set-gcal-oauth-id" placeholder="123456789-abc.apps.googleusercontent.com" style="font-family: ui-monospace, monospace; font-size: 13px;">
+      <label style="display:flex; gap:8px; align-items:center; margin-top: 8px;">
+        <input type="checkbox" id="set-gcal-direct-autosync" style="width:auto;"> Auto-sync overrides to Google Calendar on save (cancel standard + create override)
+      </label>
+      <div id="gcal-direct-status" style="margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #f1f5f9; font-size: 13px;">
+        <span id="gcal-direct-status-text">Not connected.</span>
+      </div>
+      <div style="margin-top: 10px; display:flex; gap:8px; flex-wrap: wrap;">
+        <button class="btn btn-primary" id="gcal-direct-connect-btn" onclick="gcalDirectConnect()">Connect Google Calendar</button>
+        <button class="btn" id="gcal-direct-disconnect-btn" onclick="gcalDirectDisconnect()" style="display:none;">Disconnect</button>
+        <button class="btn" id="gcal-direct-test-btn" onclick="gcalDirectTestSync()" style="display:none;">Test connection</button>
+        <button class="btn" onclick="saveGCalDirectSettings()">Save settings</button>
+      </div>
+      <p style="color: var(--ink-soft); font-size: 12px; margin-top: 12px;">
+        <b>Risks &amp; assumptions:</b> The token is held in memory only — you'll be asked to reconnect after closing the tab. Cancellation works by matching iCalUIDs (<code>luca-std-*</code>) imported from the Full Schedule .ics. If you ever delete and recreate the standard events in GCal, re-import the Full Schedule first so UIDs match. Scope requested is <code>calendar.events</code> — read/write events only, no other data.
+      </p>
+    </div>
+
     <div class="card">
       <h2>📤 Google Calendar export — two modes</h2>
       <p style="color: var(--ink-soft); font-size: 13px;">
@@ -920,6 +949,32 @@ label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft
     </div>
   </section>
 </main>
+</div>
+
+<!-- OAuth setup help modal -->
+<div class="modal-backdrop" id="oauth-help-modal">
+  <div class="modal" style="max-width: 640px;">
+    <div class="modal-head">
+      <h2>Create a Google OAuth Client ID</h2>
+      <button class="modal-close" onclick="closeModal('oauth-help-modal')">×</button>
+    </div>
+    <div style="font-size: 14px; line-height: 1.6;">
+      <p>This lets the site call your Google Calendar directly from your browser. No data leaves your machine — the token sits in this tab's memory only.</p>
+      <ol style="padding-left: 20px;">
+        <li>Open <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Google Cloud Console → New Project</a>. Name it <code>Luca Hub</code>, click Create. Wait for the project to provision, then make sure it's selected in the top bar.</li>
+        <li>Go to <a href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com" target="_blank" rel="noopener">APIs &amp; Services → Library → Google Calendar API</a> and click <b>Enable</b>.</li>
+        <li>Go to <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" rel="noopener">OAuth consent screen</a>. Pick <b>External</b>. Fill: App name <code>Luca Hub</code>, support email = your email, developer email = your email. Save. Skip Scopes. Add your Gmail address (and the co-parent's) as a <b>Test user</b>.</li>
+        <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Credentials</a> → <b>Create Credentials → OAuth client ID</b>. Application type: <b>Web application</b>. Name: <code>Luca Hub Browser</code>.</li>
+        <li>Under <b>Authorized JavaScript origins</b>, click <b>Add URI</b> and add the exact origin where this site is hosted, e.g. <code>https://your-luca-hub.netlify.app</code>. If you also run it from a local file, you can skip — file:// origins don't work; you'll need to host it.</li>
+        <li>Click Create. Copy the <b>Client ID</b> (looks like <code>1234-abc.apps.googleusercontent.com</code>) and paste it in the field on the Settings page.</li>
+        <li>Click <b>Connect Google Calendar</b>. Approve the consent screen (the warning "Google hasn't verified this app" is normal for personal apps with Test users — click <b>Continue</b>).</li>
+      </ol>
+      <p style="color: var(--ink-soft); font-size: 13px;"><b>Why this is safe:</b> The Client ID is public (it's not a secret). The scope requested is <code>https://www.googleapis.com/auth/calendar.events</code> — events read/write only. Tokens are short-lived (1 hour) and never written to localStorage.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeModal('oauth-help-modal')">Got it</button>
+    </div>
+  </div>
 </div>
 
 <!-- Day Detail Modal -->
@@ -1125,7 +1180,14 @@ const DEFAULT_STATE = {
     currentUser: 'dad',   // who is using the app right now: 'dad' | 'mom' | 'other'
     googleCalendarId: '015f7aceb506e9a3765479dd00e103e8c7118509d651dd6e0376dafcb1380b32@group.calendar.google.com',
     autoSyncGoogle: true,  // open Google Calendar on change accept / travel save
-    mailMode: 'gmail'     // 'gmail' opens web compose, 'mailto' uses OS default
+    mailMode: 'gmail',     // 'gmail' opens web compose, 'mailto' uses OS default
+    // Direct Google Calendar API sync — when enabled and connected, saving an override
+    // automatically cancels the matching standard instance(s) and creates the override events.
+    gcalDirect: {
+      enabled: false,
+      oauthClientId: '',
+      autoSyncOnSave: true
+    }
   },
   auditLog: [],         // [{id, ts, actor, action, summary, data}]
   template: {
@@ -1259,6 +1321,310 @@ function pushToGoogleCalendar(opts) {
   const url = buildGoogleCalendarURL(opts);
   window.open(url, '_blank');
 }
+
+// ===== GOOGLE CALENDAR DIRECT API (OAuth + Calendar v3) =====
+// Token lives in memory only — never persisted. Scope: calendar.events (read/write events).
+const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+const GCAL_API_BASE = 'https://www.googleapis.com/calendar/v3';
+const gcalAuth = { token: null, expiresAt: 0, tokenClient: null, connecting: false };
+
+function gcalIsConnected() {
+  return !!(gcalAuth.token && gcalAuth.expiresAt > Date.now() + 30000);
+}
+function gcalUpdateStatusUI() {
+  const txt = document.getElementById('gcal-direct-status-text');
+  const connectBtn = document.getElementById('gcal-direct-connect-btn');
+  const disconnectBtn = document.getElementById('gcal-direct-disconnect-btn');
+  const testBtn = document.getElementById('gcal-direct-test-btn');
+  if (!txt) return;
+  if (gcalIsConnected()) {
+    const mins = Math.max(0, Math.round((gcalAuth.expiresAt - Date.now()) / 60000));
+    txt.innerHTML = `<span style="color: var(--success);">●</span> Connected. Token valid for ~${mins} min. Calendar: <code>${state.settings.googleCalendarId || 'primary'}</code>`;
+    connectBtn.style.display = 'none';
+    disconnectBtn.style.display = '';
+    testBtn.style.display = '';
+  } else {
+    txt.textContent = state.settings.gcalDirect.oauthClientId
+      ? 'Not connected. Click Connect to authorize.'
+      : 'Not configured. Paste your OAuth Client ID, then click Connect.';
+    connectBtn.style.display = '';
+    disconnectBtn.style.display = 'none';
+    testBtn.style.display = 'none';
+  }
+}
+function gcalInitTokenClient() {
+  if (gcalAuth.tokenClient) return gcalAuth.tokenClient;
+  if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+    throw new Error('Google Identity Services not loaded yet. Try again in a moment.');
+  }
+  const clientId = state.settings.gcalDirect.oauthClientId.trim();
+  if (!clientId) throw new Error('Set the Google OAuth Client ID first.');
+  gcalAuth.tokenClient = window.google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: GCAL_SCOPE,
+    callback: (resp) => {
+      gcalAuth.connecting = false;
+      if (resp.error) {
+        toast('Google auth error: ' + (resp.error_description || resp.error));
+        return;
+      }
+      gcalAuth.token = resp.access_token;
+      gcalAuth.expiresAt = Date.now() + (Number(resp.expires_in || 3600) * 1000);
+      gcalUpdateStatusUI();
+      toast('Connected to Google Calendar.');
+      logAction('settings', 'Connected Direct Google Calendar Sync');
+    },
+    error_callback: (err) => {
+      gcalAuth.connecting = false;
+      toast('Google auth cancelled: ' + (err && err.type || 'unknown'));
+    }
+  });
+  return gcalAuth.tokenClient;
+}
+function gcalDirectConnect() {
+  try {
+    const tc = gcalInitTokenClient();
+    gcalAuth.connecting = true;
+    // Empty prompt = silent if already approved, else interactive
+    tc.requestAccessToken({ prompt: gcalAuth.token ? '' : 'consent' });
+  } catch (e) {
+    toast(e.message);
+  }
+}
+function gcalDirectDisconnect() {
+  if (gcalAuth.token && window.google && window.google.accounts && window.google.accounts.oauth2) {
+    try { window.google.accounts.oauth2.revoke(gcalAuth.token); } catch(e) {}
+  }
+  gcalAuth.token = null;
+  gcalAuth.expiresAt = 0;
+  gcalUpdateStatusUI();
+  logAction('settings', 'Disconnected Direct Google Calendar Sync');
+  toast('Disconnected.');
+}
+async function gcalEnsureToken() {
+  if (gcalIsConnected()) return gcalAuth.token;
+  // Try silent refresh
+  return new Promise((resolve, reject) => {
+    try {
+      const tc = gcalInitTokenClient();
+      const origCb = gcalAuth.tokenClient.callback;
+      gcalAuth.tokenClient.callback = (resp) => {
+        origCb && origCb(resp);
+        if (resp.error) reject(new Error(resp.error_description || resp.error));
+        else resolve(resp.access_token);
+      };
+      tc.requestAccessToken({ prompt: '' });
+    } catch (e) { reject(e); }
+  });
+}
+async function gcalApi(method, path, body) {
+  const token = await gcalEnsureToken();
+  const url = path.startsWith('http') ? path : (GCAL_API_BASE + path);
+  const opts = {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    }
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  if (r.status === 204) return null;
+  const text = await r.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch(e) {}
+  if (!r.ok) {
+    const msg = (data && data.error && data.error.message) || ('HTTP ' + r.status);
+    const err = new Error('GCal API: ' + msg);
+    err.status = r.status; err.data = data;
+    throw err;
+  }
+  return data;
+}
+function gcalCalendarPath() {
+  return '/calendars/' + encodeURIComponent(state.settings.googleCalendarId || 'primary');
+}
+// Find the recurring parent event in this calendar by iCalUID (stable across imports).
+async function gcalFindEventByUID(iCalUID) {
+  const path = gcalCalendarPath() + '/events?iCalUID=' + encodeURIComponent(iCalUID) + '&showDeleted=false&maxResults=5';
+  const r = await gcalApi('GET', path);
+  return (r && r.items && r.items[0]) || null;
+}
+// Find the specific instance on a given local date for a recurring parent event.
+// Returns the instance event object (with id), or null if none found.
+async function gcalFindInstanceOnDate(parentEventId, localDate, localStartTimeHHMM) {
+  // Build a UTC ISO window covering that local day generously (±30h to cover any TZ).
+  const tMin = new Date(localDate); tMin.setHours(0,0,0,0); tMin.setDate(tMin.getDate() - 1);
+  const tMax = new Date(localDate); tMax.setHours(0,0,0,0); tMax.setDate(tMax.getDate() + 2);
+  const path = '/calendars/' + encodeURIComponent(state.settings.googleCalendarId || 'primary')
+    + '/events/' + encodeURIComponent(parentEventId) + '/instances'
+    + '?timeMin=' + encodeURIComponent(tMin.toISOString())
+    + '&timeMax=' + encodeURIComponent(tMax.toISOString())
+    + '&maxResults=10&showDeleted=false';
+  const r = await gcalApi('GET', path);
+  if (!r || !r.items) return null;
+  // Match by the local date of start.dateTime (in the event's own TZ).
+  const wantKey = formatDateKey(localDate);
+  for (const it of r.items) {
+    if (!it.start || !it.start.dateTime) continue;
+    // Parse the dateTime in the event's TZ — easier: just compare the YYYY-MM-DD prefix
+    // of the dateTime string, which Google returns as e.g. "2026-05-30T18:00:00-07:00".
+    const datePrefix = it.start.dateTime.slice(0, 10);
+    if (datePrefix === wantKey) return it;
+  }
+  return null;
+}
+async function gcalPatchEvent(eventId, patch) {
+  return gcalApi('PATCH', gcalCalendarPath() + '/events/' + encodeURIComponent(eventId), patch);
+}
+async function gcalCreateEvent(event) {
+  return gcalApi('POST', gcalCalendarPath() + '/events', event);
+}
+async function gcalDeleteEvent(eventId) {
+  return gcalApi('DELETE', gcalCalendarPath() + '/events/' + encodeURIComponent(eventId));
+}
+
+// Main sync: cancel all standard chunks that fall on this date's DOW, then create override events.
+async function gcalSyncOverride(dateKey) {
+  if (!gcalIsConnected()) {
+    // try silent refresh
+    try { await gcalEnsureToken(); } catch(e) {
+      toast('Connect Google Calendar in Settings first.');
+      return false;
+    }
+  }
+  const override = state.overrides[dateKey];
+  if (!override || !override.blocks || !override.blocks.length) {
+    toast('No override to sync on ' + dateKey + '.');
+    return false;
+  }
+  const date = parseDateKey(dateKey);
+  const tz = state.settings.timezone || 'America/Phoenix';
+
+  // 1. Undo any previous sync for this key first (idempotent re-sync).
+  await gcalUnsyncOverrideInternal(dateKey, /*silent*/ true);
+
+  const meta = { cancelledInstanceIds: [], createdEventIds: [], cancelErrors: [], createErrors: [], syncedAt: new Date().toISOString() };
+
+  // 2. Cancel standard chunks for this DOW.
+  const chunks = expandTemplateToDayChunks().filter(c => c.dow === date.getDay());
+  for (const c of chunks) {
+    try {
+      const parent = await gcalFindEventByUID(chunkUID(c));
+      if (!parent) {
+        meta.cancelErrors.push('No standard event found for UID ' + chunkUID(c) + ' — did you import Full Schedule.ics first?');
+        continue;
+      }
+      const inst = await gcalFindInstanceOnDate(parent.id, date, c.startTime);
+      if (!inst) {
+        // Already cancelled (EXDATE) — nothing to do.
+        continue;
+      }
+      await gcalPatchEvent(inst.id, { status: 'cancelled' });
+      meta.cancelledInstanceIds.push(inst.id);
+    } catch (e) {
+      meta.cancelErrors.push((e && e.message) || String(e));
+    }
+  }
+
+  // 3. Create override events.
+  for (const b of override.blocks) {
+    try {
+      const [sh,sm] = b.start.split(':').map(Number);
+      const [eh,em] = b.end.split(':').map(Number);
+      const startLocal = new Date(date); startLocal.setHours(sh, sm, 0, 0);
+      const endLocal = new Date(date); endLocal.setHours(eh, em, 0, 0);
+      const emoji = b.who==='dad'?'🔵 ':b.who==='mom'?'🟢 ':'🟫 ';
+      const ev = {
+        summary: emoji + state.settings.childName + ' — with ' + whoLabel(b.who) + ' (override)',
+        description: 'One-day override from Luca\'s Hub for ' + dateKey + '. Replaces the standard recurring event.',
+        start: { dateTime: gcalISOLocal(startLocal), timeZone: tz },
+        end:   { dateTime: gcalISOLocal(endLocal),   timeZone: tz }
+      };
+      const created = await gcalCreateEvent(ev);
+      if (created && created.id) meta.createdEventIds.push(created.id);
+    } catch (e) {
+      meta.createErrors.push((e && e.message) || String(e));
+    }
+  }
+
+  override.gcalDirect = meta;
+  override.pushed = true;
+  override.pushedAt = meta.syncedAt;
+  saveState();
+
+  const errors = meta.cancelErrors.length + meta.createErrors.length;
+  const msg = `Synced ${dateKey}: ${meta.cancelledInstanceIds.length} cancelled, ${meta.createdEventIds.length} created` +
+              (errors ? ` (${errors} warning${errors===1?'':'s'})` : '');
+  logAction('schedule', msg, meta.cancelErrors.concat(meta.createErrors).length ? { errors: meta.cancelErrors.concat(meta.createErrors) } : null);
+  toast(msg);
+  if (errors) console.warn('Sync warnings for ' + dateKey, meta);
+  return true;
+}
+
+// Undo a previous direct-sync for this override: delete created events, re-confirm cancelled instances.
+async function gcalUnsyncOverrideInternal(dateKey, silent) {
+  const override = state.overrides[dateKey];
+  if (!override || !override.gcalDirect) return true;
+  const meta = override.gcalDirect;
+  const errors = [];
+  // Delete created override events
+  for (const id of (meta.createdEventIds || [])) {
+    try { await gcalDeleteEvent(id); } catch(e) {
+      if (e.status !== 404 && e.status !== 410) errors.push('delete ' + id + ': ' + e.message);
+    }
+  }
+  // Re-confirm cancelled standard instances
+  for (const id of (meta.cancelledInstanceIds || [])) {
+    try { await gcalPatchEvent(id, { status: 'confirmed' }); } catch(e) {
+      if (e.status !== 404 && e.status !== 410) errors.push('restore ' + id + ': ' + e.message);
+    }
+  }
+  delete override.gcalDirect;
+  override.pushed = false;
+  delete override.pushedAt;
+  saveState();
+  if (!silent) {
+    const msg = errors.length
+      ? `Unsynced ${dateKey} with ${errors.length} error${errors.length===1?'':'s'} — see console.`
+      : `Unsynced ${dateKey}. Standard event restored.`;
+    if (errors.length) console.warn(errors);
+    toast(msg);
+    logAction('schedule', msg, errors.length ? { errors } : null);
+  }
+  return errors.length === 0;
+}
+
+// Public wrapper used by the day modal's "Unsync" button
+async function gcalUnsyncOverride(dateKey) {
+  if (!gcalIsConnected()) {
+    try { await gcalEnsureToken(); } catch(e) {
+      toast('Connect Google Calendar in Settings first.');
+      return false;
+    }
+  }
+  return gcalUnsyncOverrideInternal(dateKey, false);
+}
+
+// Format a local Date as ISO without timezone marker — Calendar API combines this with timeZone field.
+function gcalISOLocal(d) {
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + 'T' +
+         p(d.getHours()) + ':' + p(d.getMinutes()) + ':00';
+}
+
+async function gcalDirectTestSync() {
+  try {
+    await gcalEnsureToken();
+    const cal = await gcalApi('GET', gcalCalendarPath());
+    toast('✓ Connected to "' + (cal.summary || 'calendar') + '" — events scope OK.');
+    gcalUpdateStatusUI();
+  } catch (e) {
+    toast('Test failed: ' + e.message);
+  }
+}
+
+function openOAuthSetupHelp() { openModal('oauth-help-modal'); }
 
 // Mark an override date as pushed (so export doesn't re-emit it)
 function markOverridePushed(dateKey) {
@@ -1683,10 +2049,14 @@ function openDayModal(date) {
     <button class="btn btn-sm" style="margin-top: 8px;" onclick="addDayBlock()">＋ Add block</button>
     ${hasOverride ? `
       <div style="margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap;">
+        ${state.settings.gcalDirect && state.settings.gcalDirect.enabled ? `
+          <button class="btn btn-sm btn-primary" onclick="gcalSyncOverride('${key}').then(ok=>{ if(ok){ closeModal('day-modal'); renderSchedule(); renderDashboard(); renderAudit(); } })" title="Cancels the standard recurring event for this day in Google Calendar AND creates the override events. One click, no .ics file.">🔄 Sync to Google Calendar now</button>
+          ${isPushed ? `<button class="btn btn-sm" onclick="gcalUnsyncOverride('${key}').then(()=>{ closeModal('day-modal'); renderSchedule(); renderDashboard(); renderAudit(); })" title="Delete the override events in GCal and restore the standard recurring event for this day.">↺ Unsync (restore standard)</button>` : ''}
+        ` : ''}
         ${!isPushed ? `
-          <button class="btn btn-sm btn-primary" onclick="exportOverrideCancellationICS('${key}')" title="Recommended. Exports a single .ics that BOTH cancels the standard event for this day AND adds the override. Requires you've already imported the full schedule once.">📥 Export override + auto-cancel standard (.ics)</button>
-          <button class="btn btn-sm btn-ghost" onclick="syncOverrideToGCal('${key}')" title="Legacy: opens GCal compose tabs for each block. You'll need to manually delete the standard recurring event occurrence on this day.">📅 Open GCal compose (manual cleanup)</button>
-        ` : `<button class="btn btn-sm btn-ghost" onclick="markOverrideUnpushed('${key}')" title="Mark as not yet synced">↺ Mark unsynced</button>`}
+          <button class="btn btn-sm ${state.settings.gcalDirect && state.settings.gcalDirect.enabled ? 'btn-ghost' : 'btn-primary'}" onclick="exportOverrideCancellationICS('${key}')" title="Alternative: export an .ics that BOTH cancels the standard event for this day AND adds the override. Requires you've already imported the full schedule once.">📥 Export .ics (manual import)</button>
+          <button class="btn btn-sm btn-ghost" onclick="syncOverrideToGCal('${key}')" title="Legacy: opens GCal compose tabs for each block. You'll need to manually delete the standard recurring event occurrence on this day.">📅 Open GCal compose</button>
+        ` : ''}
         <button class="btn btn-sm btn-ghost" onclick="clearDayOverride()">Revert to standard</button>
       </div>
     ` : ''}
@@ -1741,15 +2111,38 @@ function renderDayBlocks() {
     </div>`).join('');
 }
 function addDayBlock() { editingBlocks.push({ who: 'dad', start: '09:00', end: '17:00' }); renderDayBlocks(); }
-function saveDayOverride() {
+async function saveDayOverride() {
   const key = formatDateKey(editingDate);
+  // Preserve prior gcalDirect metadata so re-sync can clean it up cleanly
+  const prevMeta = state.overrides[key] && state.overrides[key].gcalDirect;
   state.overrides[key] = { blocks: editingBlocks.slice() };
+  if (prevMeta) state.overrides[key].gcalDirect = prevMeta;
   logAction('schedule', `Set one-day override for ${key}: ${editingBlocks.map(b=>whoLabel(b.who)+' '+b.start+'-'+b.end).join(', ')}`);
-  saveState(); closeModal('day-modal'); renderSchedule(); renderDashboard(); renderAudit();
+  saveState();
+  // Auto-sync to Google Calendar if Direct Sync is enabled.
+  const direct = state.settings.gcalDirect || {};
+  if (direct.enabled && direct.autoSyncOnSave) {
+    closeModal('day-modal');
+    toast('Saving + syncing to Google Calendar…');
+    try {
+      await gcalSyncOverride(key);
+    } catch (e) {
+      toast('Sync failed: ' + (e.message || e));
+    }
+    renderSchedule(); renderDashboard(); renderAudit();
+    return;
+  }
+  closeModal('day-modal'); renderSchedule(); renderDashboard(); renderAudit();
   toast('Day updated.');
 }
-function clearDayOverride() {
+async function clearDayOverride() {
   const key = formatDateKey(editingDate);
+  const override = state.overrides[key];
+  // If a direct-sync was made, undo it first so GCal returns to standard.
+  if (override && override.gcalDirect && state.settings.gcalDirect && state.settings.gcalDirect.enabled) {
+    toast('Restoring standard event in Google Calendar…');
+    try { await gcalUnsyncOverrideInternal(key, /*silent*/ true); } catch(e) { console.warn(e); }
+  }
   delete state.overrides[key];
   logAction('schedule', `Cleared one-day override for ${key} (reverted to standard)`);
   saveState(); closeModal('day-modal'); renderSchedule(); renderDashboard(); renderAudit();
@@ -2527,6 +2920,28 @@ function renderSettings() {
   document.getElementById('set-autosync').checked = !!state.settings.autoSyncGoogle;
   document.getElementById('set-gcal-id').value = state.settings.googleCalendarId || '';
   document.getElementById('set-mail-mode').value = state.settings.mailMode || 'gmail';
+  // Direct sync prefs
+  const direct = state.settings.gcalDirect || {};
+  const oauthInput = document.getElementById('set-gcal-oauth-id');
+  const autoSyncInput = document.getElementById('set-gcal-direct-autosync');
+  if (oauthInput) oauthInput.value = direct.oauthClientId || '';
+  if (autoSyncInput) autoSyncInput.checked = direct.autoSyncOnSave !== false;
+  gcalUpdateStatusUI();
+}
+function saveGCalDirectSettings() {
+  if (!state.settings.gcalDirect) state.settings.gcalDirect = {};
+  const newClientId = document.getElementById('set-gcal-oauth-id').value.trim();
+  const clientIdChanged = newClientId !== state.settings.gcalDirect.oauthClientId;
+  state.settings.gcalDirect.oauthClientId = newClientId;
+  state.settings.gcalDirect.autoSyncOnSave = document.getElementById('set-gcal-direct-autosync').checked;
+  // Enable flag is implied by having a client ID
+  state.settings.gcalDirect.enabled = !!newClientId;
+  // If client ID changed, force re-auth
+  if (clientIdChanged) { gcalAuth.tokenClient = null; gcalAuth.token = null; gcalAuth.expiresAt = 0; }
+  logAction('settings', `Direct GCal sync ${state.settings.gcalDirect.enabled ? 'configured' : 'disabled'}`);
+  saveState();
+  gcalUpdateStatusUI();
+  toast('Saved.');
 }
 function saveSettings() {
   const prevUser = state.settings.currentUser;
@@ -2970,7 +3385,7 @@ renderAll();
 <script>
 (function () {
   // SHA-256 hex of the current password. Replace to rotate.
-  var PASSWORD_HASH = '9a4b0a1261101c159a7ca001aa20e0d16a44681cfaf5dc2b1bd9da815f229a40';
+  var PASSWORD_HASH = '6c0f7dd803f93c8f060bbaa576775e54f22699ba694223a88b5fdc30fda23002';
   var STORAGE_KEY   = 'lc-auth-v1';
 
   var form     = document.getElementById('lc-gate-form');
